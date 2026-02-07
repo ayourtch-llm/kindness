@@ -1,0 +1,48 @@
+[task]
+id = "1_04_is_even"
+tier = 1
+title = "Is Even"
+language = "rust"
+
+[task.description]
+text = """
+Write a function `is_even(n: i64) -> bool` that returns `true` if the given integer
+is even, and `false` otherwise.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+
+[[task.tests.cases]]
+name = "test_even_positive"
+code = """
+assert_eq!(is_even(4), true);
+"""
+
+[[task.tests.cases]]
+name = "test_odd_positive"
+code = """
+assert_eq!(is_even(7), false);
+"""
+
+[[task.tests.cases]]
+name = "test_zero"
+code = """
+assert_eq!(is_even(0), true);
+"""
+
+[[task.tests.cases]]
+name = "test_negative_even"
+code = """
+assert_eq!(is_even(-2), true);
+"""
+
+[[task.tests.cases]]
+name = "test_negative_odd"
+code = """
+assert_eq!(is_even(-3), false);
+"""

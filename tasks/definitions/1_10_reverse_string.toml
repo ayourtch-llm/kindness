@@ -1,0 +1,48 @@
+[task]
+id = "1_10_reverse_string"
+tier = 1
+title = "Reverse String"
+language = "rust"
+
+[task.description]
+text = """
+Write a function `reverse_string(s: &str) -> String` that returns a new string with
+the characters of the input string in reverse order.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+
+[[task.tests.cases]]
+name = "test_simple"
+code = """
+assert_eq!(reverse_string("hello"), "olleh");
+"""
+
+[[task.tests.cases]]
+name = "test_empty"
+code = """
+assert_eq!(reverse_string(""), "");
+"""
+
+[[task.tests.cases]]
+name = "test_single_char"
+code = """
+assert_eq!(reverse_string("a"), "a");
+"""
+
+[[task.tests.cases]]
+name = "test_palindrome"
+code = """
+assert_eq!(reverse_string("madam"), "madam");
+"""
+
+[[task.tests.cases]]
+name = "test_spaces"
+code = """
+assert_eq!(reverse_string("hello world"), "dlrow olleh");
+"""
