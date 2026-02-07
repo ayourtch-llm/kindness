@@ -251,7 +251,7 @@ def generate_figures(df: pd.DataFrame, agg: pd.DataFrame, fig_dir: Path) -> None
     # 2. Box plot – pass distribution by style
     fig, ax = plt.subplots(figsize=(6, 4))
     data_by_style = [df.loc[df["style"] == s, "pass"].values for s in styles]
-    bp = ax.boxplot(data_by_style, labels=styles, patch_artist=True)
+    bp = ax.boxplot(data_by_style, tick_labels=styles, patch_artist=True)
     colors = ["#4c72b0", "#dd8452", "#55a868"][:len(styles)]
     for patch, color in zip(bp["boxes"], colors):
         patch.set_facecolor(color)
@@ -305,10 +305,37 @@ def main() -> None:
 
     df = load_results(args.results)
 
-    # Ensure boolean pass column is numeric
-    df["pass"] = df["pass"].astype(int)
-    if "compiles" in df.columns:
+    # Derive columns from eval output format:
+    # eval produces: compiled, tests_passed, tests_total, latency_ms, input_tokens, output_tokens
+    # We need: pass (rate 0-1), compiles (0/1), tier, latency_s, total_tokens
+
+    # Pass rate per result
+    if "pass" not in df.columns:
+        if "tests_passed" in df.columns and "tests_total" in df.columns:
+            df["pass"] = (df["tests_passed"] / df["tests_total"].replace(0, np.nan)).fillna(0.0)
+        else:
+            df["pass"] = 0.0
+
+    # Compile flag
+    if "compiles" not in df.columns and "compiled" in df.columns:
+        df["compiles"] = df["compiled"].astype(int)
+    elif "compiles" in df.columns:
         df["compiles"] = df["compiles"].astype(int)
+
+    # Derive tier from task_id (first character)
+    if "tier" not in df.columns and "task_id" in df.columns:
+        df["tier"] = df["task_id"].str[0].astype(int)
+
+    # Latency in seconds
+    if "latency_s" not in df.columns and "latency_ms" in df.columns:
+        df["latency_s"] = df["latency_ms"] / 1000.0
+
+    # Total tokens
+    if "total_tokens" not in df.columns:
+        if "input_tokens" in df.columns and "output_tokens" in df.columns:
+            df["total_tokens"] = df["input_tokens"] + df["output_tokens"]
+
+    df["pass"] = df["pass"].astype(float)
 
     styles = sorted(df["style"].unique().tolist())
     print(f"Loaded {len(df)} results across styles: {styles}")
