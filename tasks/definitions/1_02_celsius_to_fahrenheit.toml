@@ -1,0 +1,46 @@
+[task]
+id = "1_02_celsius_to_fahrenheit"
+tier = 1
+title = "Celsius to Fahrenheit"
+language = "rust"
+
+[task.description]
+text = """
+Write a function `celsius_to_fahrenheit(c: f64) -> f64` that converts a temperature
+from Celsius to Fahrenheit using the formula: F = C * 9.0 / 5.0 + 32.0.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+
+[[task.tests.cases]]
+name = "test_freezing_point"
+code = """
+let result = celsius_to_fahrenheit(0.0);
+assert!((result - 32.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_boiling_point"
+code = """
+let result = celsius_to_fahrenheit(100.0);
+assert!((result - 212.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_negative"
+code = """
+let result = celsius_to_fahrenheit(-40.0);
+assert!((result - (-40.0)).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_body_temperature"
+code = """
+let result = celsius_to_fahrenheit(37.0);
+assert!((result - 98.6).abs() < 1e-9);
+"""

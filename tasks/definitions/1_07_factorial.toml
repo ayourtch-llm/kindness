@@ -1,0 +1,49 @@
+[task]
+id = "1_07_factorial"
+tier = 1
+title = "Factorial"
+language = "rust"
+
+[task.description]
+text = """
+Write a function `factorial(n: u64) -> u64` that computes the factorial of `n`.
+The factorial of 0 is defined as 1. You may assume `n` is at most 20 (so the
+result fits in a `u64`).
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+
+[[task.tests.cases]]
+name = "test_zero"
+code = """
+assert_eq!(factorial(0), 1);
+"""
+
+[[task.tests.cases]]
+name = "test_one"
+code = """
+assert_eq!(factorial(1), 1);
+"""
+
+[[task.tests.cases]]
+name = "test_five"
+code = """
+assert_eq!(factorial(5), 120);
+"""
+
+[[task.tests.cases]]
+name = "test_ten"
+code = """
+assert_eq!(factorial(10), 3628800);
+"""
+
+[[task.tests.cases]]
+name = "test_twenty"
+code = """
+assert_eq!(factorial(20), 2432902008176640000);
+"""

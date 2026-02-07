@@ -1,0 +1,124 @@
+[task]
+id = "5_11_diff_algorithm"
+tier = 5
+title = "Myers Diff Algorithm"
+language = "rust"
+
+[task.description]
+text = """
+Implement the Myers diff algorithm to compute the shortest edit script between two sequences of lines.
+
+Define:
+```rust
+#[derive(Debug, Clone, PartialEq)]
+pub enum DiffOp {
+    Equal(String),
+    Insert(String),
+    Delete(String),
+}
+```
+
+Implement:
+- `fn diff(old: &[&str], new: &[&str]) -> Vec<DiffOp>` — compute the minimal diff between old and new line sequences. Returns a sequence of operations that transforms old into new.
+- `fn format_unified(ops: &[DiffOp], context: usize) -> String` — format the diff operations as a unified diff string. Include `context` lines of Equal context around changes. Use `- ` prefix for deletions, `+ ` prefix for insertions, and `  ` (two spaces) prefix for context lines. Separate discontiguous hunks with `---` on its own line.
+
+The diff should produce a minimal edit sequence (fewest Insert + Delete operations possible).
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "identical_inputs"
+code = """
+let old = vec!["a", "b", "c"];
+let new = vec!["a", "b", "c"];
+let ops = diff(&old, &new);
+assert_eq!(ops, vec![
+    DiffOp::Equal("a".into()),
+    DiffOp::Equal("b".into()),
+    DiffOp::Equal("c".into()),
+]);
+"""
+
+[[task.tests.cases]]
+name = "simple_insertion"
+code = """
+let old = vec!["a", "c"];
+let new = vec!["a", "b", "c"];
+let ops = diff(&old, &new);
+assert_eq!(ops, vec![
+    DiffOp::Equal("a".into()),
+    DiffOp::Insert("b".into()),
+    DiffOp::Equal("c".into()),
+]);
+"""
+
+[[task.tests.cases]]
+name = "simple_deletion"
+code = """
+let old = vec!["a", "b", "c"];
+let new = vec!["a", "c"];
+let ops = diff(&old, &new);
+assert_eq!(ops, vec![
+    DiffOp::Equal("a".into()),
+    DiffOp::Delete("b".into()),
+    DiffOp::Equal("c".into()),
+]);
+"""
+
+[[task.tests.cases]]
+name = "replacement"
+code = """
+let old = vec!["a", "b", "c"];
+let new = vec!["a", "x", "c"];
+let ops = diff(&old, &new);
+// Minimal diff: delete b, insert x
+let has_delete_b = ops.contains(&DiffOp::Delete("b".into()));
+let has_insert_x = ops.contains(&DiffOp::Insert("x".into()));
+assert!(has_delete_b);
+assert!(has_insert_x);
+assert_eq!(ops.iter().filter(|o| matches!(o, DiffOp::Equal(_))).count(), 2);
+"""
+
+[[task.tests.cases]]
+name = "completely_different"
+code = """
+let old = vec!["a", "b"];
+let new = vec!["c", "d"];
+let ops = diff(&old, &new);
+let deletes: Vec<_> = ops.iter().filter(|o| matches!(o, DiffOp::Delete(_))).collect();
+let inserts: Vec<_> = ops.iter().filter(|o| matches!(o, DiffOp::Insert(_))).collect();
+assert_eq!(deletes.len(), 2);
+assert_eq!(inserts.len(), 2);
+"""
+
+[[task.tests.cases]]
+name = "format_unified_output"
+code = """
+let old = vec!["a", "b", "c", "d", "e"];
+let new = vec!["a", "b", "x", "d", "e"];
+let ops = diff(&old, &new);
+let unified = format_unified(&ops, 1);
+// Should contain context around the change
+assert!(unified.contains("+ x") || unified.contains("+x"));
+assert!(unified.contains("- c") || unified.contains("-c"));
+assert!(unified.contains("  b") || unified.contains(" b"));
+"""
+
+[[task.tests.cases]]
+name = "empty_inputs"
+code = """
+let old: Vec<&str> = vec![];
+let new: Vec<&str> = vec![];
+let ops = diff(&old, &new);
+assert!(ops.is_empty());
+
+let old2: Vec<&str> = vec![];
+let new2 = vec!["a"];
+let ops2 = diff(&old2, &new2);
+assert_eq!(ops2, vec![DiffOp::Insert("a".into())]);
+"""

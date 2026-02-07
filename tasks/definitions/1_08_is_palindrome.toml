@@ -1,0 +1,49 @@
+[task]
+id = "1_08_is_palindrome"
+tier = 1
+title = "Is Palindrome"
+language = "rust"
+
+[task.description]
+text = """
+Write a function `is_palindrome(s: &str) -> bool` that returns `true` if the given
+string reads the same forwards and backwards, and `false` otherwise. The comparison
+should be case-sensitive and consider all characters (including spaces and punctuation).
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+
+[[task.tests.cases]]
+name = "test_simple_palindrome"
+code = """
+assert_eq!(is_palindrome("racecar"), true);
+"""
+
+[[task.tests.cases]]
+name = "test_not_palindrome"
+code = """
+assert_eq!(is_palindrome("hello"), false);
+"""
+
+[[task.tests.cases]]
+name = "test_empty_string"
+code = """
+assert_eq!(is_palindrome(""), true);
+"""
+
+[[task.tests.cases]]
+name = "test_single_char"
+code = """
+assert_eq!(is_palindrome("a"), true);
+"""
+
+[[task.tests.cases]]
+name = "test_case_sensitive"
+code = """
+assert_eq!(is_palindrome("Aba"), false);
+"""

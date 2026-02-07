@@ -1,0 +1,56 @@
+[task]
+id = "2_08_gcd"
+tier = 2
+title = "Greatest Common Divisor"
+language = "rust"
+
+[task.description]
+text = """
+Compute the greatest common divisor (GCD) of two non-negative integers using
+the Euclidean algorithm. If both inputs are 0, return 0. If one input is 0,
+return the other.
+
+Implement: fn gcd(a: u64, b: u64) -> u64
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_basic"
+code = """
+assert_eq!(gcd(12, 8), 4);
+"""
+
+[[task.tests.cases]]
+name = "test_coprime"
+code = """
+assert_eq!(gcd(13, 7), 1);
+"""
+
+[[task.tests.cases]]
+name = "test_same_number"
+code = """
+assert_eq!(gcd(42, 42), 42);
+"""
+
+[[task.tests.cases]]
+name = "test_one_zero"
+code = """
+assert_eq!(gcd(0, 5), 5);
+"""
+
+[[task.tests.cases]]
+name = "test_both_zero"
+code = """
+assert_eq!(gcd(0, 0), 0);
+"""
+
+[[task.tests.cases]]
+name = "test_large_numbers"
+code = """
+assert_eq!(gcd(1_000_000_007, 999_999_937), 1);
+"""

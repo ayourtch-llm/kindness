@@ -1,0 +1,49 @@
+[task]
+id = "1_06_count_vowels"
+tier = 1
+title = "Count Vowels"
+language = "rust"
+
+[task.description]
+text = """
+Write a function `count_vowels(s: &str) -> usize` that returns the number of vowels
+(a, e, i, o, u) in the given string. Both uppercase and lowercase vowels should be
+counted.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+
+[[task.tests.cases]]
+name = "test_lowercase"
+code = """
+assert_eq!(count_vowels("hello"), 2);
+"""
+
+[[task.tests.cases]]
+name = "test_uppercase"
+code = """
+assert_eq!(count_vowels("AEIOU"), 5);
+"""
+
+[[task.tests.cases]]
+name = "test_no_vowels"
+code = """
+assert_eq!(count_vowels("rhythm"), 0);
+"""
+
+[[task.tests.cases]]
+name = "test_empty_string"
+code = """
+assert_eq!(count_vowels(""), 0);
+"""
+
+[[task.tests.cases]]
+name = "test_mixed_case"
+code = """
+assert_eq!(count_vowels("HeLLo WoRLd"), 3);
+"""

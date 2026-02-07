@@ -1,0 +1,58 @@
+[task]
+id = "2_07_run_length_encoding"
+tier = 2
+title = "Run-Length Encoding"
+language = "rust"
+
+[task.description]
+text = """
+Implement run-length encoding for a string. Consecutive duplicate characters
+are replaced by the character followed by the count. Single characters (count
+of 1) should be represented as just the character without a count.
+
+For example: "aaabbc" -> "a3b2c"
+
+Implement: fn rle_encode(s: &str) -> String
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_basic_encoding"
+code = """
+assert_eq!(rle_encode("aaabbc"), "a3b2c");
+"""
+
+[[task.tests.cases]]
+name = "test_no_repeats"
+code = """
+assert_eq!(rle_encode("abcd"), "abcd");
+"""
+
+[[task.tests.cases]]
+name = "test_all_same"
+code = """
+assert_eq!(rle_encode("aaaa"), "a4");
+"""
+
+[[task.tests.cases]]
+name = "test_empty_string"
+code = """
+assert_eq!(rle_encode(""), "");
+"""
+
+[[task.tests.cases]]
+name = "test_single_char"
+code = """
+assert_eq!(rle_encode("z"), "z");
+"""
+
+[[task.tests.cases]]
+name = "test_mixed_runs"
+code = """
+assert_eq!(rle_encode("wwwwaaadexxxxxxywww"), "w4a3dex6yw3");
+"""

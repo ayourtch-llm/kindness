@@ -1,0 +1,102 @@
+[task]
+id = "5_02_expression_evaluator"
+tier = 5
+title = "Expression Evaluator"
+language = "rust"
+
+[task.description]
+text = """
+Build an expression evaluator with variables, user-defined functions, and correct operator precedence.
+
+Implement `struct Evaluator` with:
+- `fn new() -> Self`
+- `fn set_variable(&mut self, name: &str, val: f64)` — bind a variable name to a value.
+- `fn register_function(&mut self, name: &str, f: Box<dyn Fn(&[f64]) -> f64>)` — register a callable function.
+- `fn evaluate(&self, expr: &str) -> Result<f64, String>` — parse and evaluate the expression.
+
+Supported syntax (highest to lowest precedence):
+1. Parenthesized expressions: `(expr)`
+2. Function calls: `name(arg1, arg2, ...)`
+3. Unary minus: `-expr`
+4. Exponentiation: `^` (right-associative)
+5. Multiplication / Division: `*`, `/`
+6. Addition / Subtraction: `+`, `-`
+
+Variables are bare identifiers (e.g., `x`, `pi`).
+Division by zero should return an error.
+Unknown variables or functions should return an error.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "basic_arithmetic"
+code = """
+let eval = Evaluator::new();
+let r = eval.evaluate("2 + 3 * 4").unwrap();
+assert!((r - 14.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "operator_precedence_and_parens"
+code = """
+let eval = Evaluator::new();
+let r = eval.evaluate("(2 + 3) * 4").unwrap();
+assert!((r - 20.0).abs() < 1e-9);
+
+let r2 = eval.evaluate("2 ^ 3 ^ 2").unwrap();
+// right-associative: 2^(3^2) = 2^9 = 512
+assert!((r2 - 512.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "variables"
+code = """
+let mut eval = Evaluator::new();
+eval.set_variable("x", 10.0);
+eval.set_variable("y", 3.0);
+let r = eval.evaluate("x + y * 2").unwrap();
+assert!((r - 16.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "functions"
+code = """
+let mut eval = Evaluator::new();
+eval.register_function("double", Box::new(|args: &[f64]| args[0] * 2.0));
+eval.register_function("add", Box::new(|args: &[f64]| args[0] + args[1]));
+eval.set_variable("x", 5.0);
+let r = eval.evaluate("double(x) + add(1, 2)").unwrap();
+assert!((r - 13.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "unary_minus"
+code = """
+let eval = Evaluator::new();
+let r = eval.evaluate("-3 + 5").unwrap();
+assert!((r - 2.0).abs() < 1e-9);
+
+let r2 = eval.evaluate("-(2 + 3)").unwrap();
+assert!((r2 - (-5.0)).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "division_by_zero"
+code = """
+let eval = Evaluator::new();
+let r = eval.evaluate("1 / 0");
+assert!(r.is_err());
+"""
+
+[[task.tests.cases]]
+name = "unknown_variable_error"
+code = """
+let eval = Evaluator::new();
+let r = eval.evaluate("x + 1");
+assert!(r.is_err());
+"""

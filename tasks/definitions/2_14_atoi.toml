@@ -1,0 +1,86 @@
+[task]
+id = "2_14_atoi"
+tier = 2
+title = "String to Integer (atoi)"
+language = "rust"
+
+[task.description]
+text = """
+Implement a function that converts a string to a 32-bit signed integer,
+similar to C's atoi function.
+
+The algorithm:
+1. Discard leading whitespace.
+2. Check for an optional '+' or '-' sign.
+3. Read digits until a non-digit character or end of string.
+4. Clamp the result to the 32-bit signed integer range [i32::MIN, i32::MAX].
+5. If no digits are read, return 0.
+
+Implement: fn my_atoi(s: &str) -> i32
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_basic_positive"
+code = """
+assert_eq!(my_atoi("42"), 42);
+"""
+
+[[task.tests.cases]]
+name = "test_leading_whitespace"
+code = """
+assert_eq!(my_atoi("   -42"), -42);
+"""
+
+[[task.tests.cases]]
+name = "test_trailing_non_digits"
+code = """
+assert_eq!(my_atoi("4193 with words"), 4193);
+"""
+
+[[task.tests.cases]]
+name = "test_no_digits"
+code = """
+assert_eq!(my_atoi("words and 987"), 0);
+"""
+
+[[task.tests.cases]]
+name = "test_overflow_positive"
+code = """
+assert_eq!(my_atoi("91283472332"), i32::MAX);
+"""
+
+[[task.tests.cases]]
+name = "test_overflow_negative"
+code = """
+assert_eq!(my_atoi("-91283472332"), i32::MIN);
+"""
+
+[[task.tests.cases]]
+name = "test_explicit_plus"
+code = """
+assert_eq!(my_atoi("+1"), 1);
+"""
+
+[[task.tests.cases]]
+name = "test_empty_string"
+code = """
+assert_eq!(my_atoi(""), 0);
+"""
+
+[[task.tests.cases]]
+name = "test_only_whitespace"
+code = """
+assert_eq!(my_atoi("   "), 0);
+"""
+
+[[task.tests.cases]]
+name = "test_zero"
+code = """
+assert_eq!(my_atoi("0"), 0);
+"""

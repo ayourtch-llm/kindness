@@ -1,0 +1,13 @@
+# Rust build artifacts
+/runner/target/
+/eval/target/
+/tasks/solutions/*/target/
+
+# Generated results
+/eval/results.json
+/analysis/summary.md
+/analysis/figures/*.png
+/analysis/.venv/
+
+# OS files
+.DS_Store

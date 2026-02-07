@@ -1,0 +1,70 @@
+[task]
+id = "4_05_word_break"
+tier = 4
+title = "Word Break"
+language = "rust"
+
+[task.description]
+text = """
+Given a string s and a dictionary of words, determine if s can be segmented into
+a space-separated sequence of one or more dictionary words.
+
+Signature:
+  fn word_break(s: &str, dict: &[&str]) -> bool
+
+Use dynamic programming. Let dp[i] = true if s[0..i] can be segmented using
+dictionary words. For each position i, check all words in the dictionary to see
+if s ends with that word at position i and dp[i - word.len()] is true.
+
+Return true if the entire string can be segmented, false otherwise.
+An empty string should return true (vacuously segmentable).
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_empty_string"
+code = """
+assert_eq!(word_break("", &["a", "b"]), true);
+"""
+
+[[task.tests.cases]]
+name = "test_single_word"
+code = """
+assert_eq!(word_break("hello", &["hello"]), true);
+"""
+
+[[task.tests.cases]]
+name = "test_two_words"
+code = """
+assert_eq!(word_break("leetcode", &["leet", "code"]), true);
+"""
+
+[[task.tests.cases]]
+name = "test_impossible"
+code = """
+assert_eq!(word_break("catsandog", &["cats", "dog", "sand", "and", "cat"]), false);
+"""
+
+[[task.tests.cases]]
+name = "test_reuse_words"
+code = """
+assert_eq!(word_break("applepenapple", &["apple", "pen"]), true);
+"""
+
+[[task.tests.cases]]
+name = "test_prefix_trap"
+code = """
+// "aaaaaaa" with dict ["aaa","aaaa"] => 3+4=7 yes
+assert_eq!(word_break("aaaaaaa", &["aaa", "aaaa"]), true);
+"""
+
+[[task.tests.cases]]
+name = "test_no_match"
+code = """
+assert_eq!(word_break("xyz", &["a", "b", "c"]), false);
+"""

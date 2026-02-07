@@ -1,0 +1,169 @@
+[task]
+id = "5_05_virtual_machine"
+tier = 5
+title = "Stack-Based Bytecode VM"
+language = "rust"
+
+[task.description]
+text = """
+Build a stack-based bytecode virtual machine with a call stack for function calls.
+
+Define the instruction set:
+```rust
+#[derive(Debug, Clone)]
+pub enum Opcode {
+    Push(i64),
+    Pop,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Dup,
+    Swap,
+    Over,
+    Rot,
+    Eq,
+    Lt,
+    Gt,
+    JmpIf(usize),   // pop top; if non-zero, jump to instruction index
+    Jmp(usize),     // unconditional jump
+    Call(usize),     // push return address, jump to instruction index
+    Ret,             // pop return address from call stack, jump there
+    Halt,
+}
+```
+
+Implement `struct VM` with:
+- `fn new() -> Self`
+- `fn execute(&mut self, program: &[Opcode]) -> Result<Vec<i64>, String>` — execute the program and return the final data stack.
+
+Semantics:
+- `Add/Sub/Mul/Div`: pop two values, push result (second-from-top OP top). Div by zero is an error.
+- `Dup`: duplicate top. `Swap`: swap top two. `Over`: copy second-from-top to top. `Rot`: rotate top three (a b c -> b c a).
+- `Eq/Lt/Gt`: pop two, push 1 if true else 0 (comparing second OP top).
+- `Call(addr)`: push next instruction index onto call stack, then jump to addr.
+- `Ret`: pop from call stack and jump to that address.
+- `Halt`: stop execution immediately.
+- If the program counter goes past the end without Halt, return current stack.
+- Stack underflow should return an error.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "basic_arithmetic"
+code = """
+let mut vm = VM::new();
+let prog = vec![
+    Opcode::Push(10),
+    Opcode::Push(20),
+    Opcode::Add,
+    Opcode::Push(3),
+    Opcode::Mul,
+    Opcode::Halt,
+];
+let stack = vm.execute(&prog).unwrap();
+assert_eq!(stack, vec![90]);
+"""
+
+[[task.tests.cases]]
+name = "stack_manipulation"
+code = """
+let mut vm = VM::new();
+let prog = vec![
+    Opcode::Push(1),
+    Opcode::Push(2),
+    Opcode::Push(3),
+    Opcode::Rot,      // 1 2 3 -> 2 3 1
+    Opcode::Halt,
+];
+let stack = vm.execute(&prog).unwrap();
+assert_eq!(stack, vec![2, 3, 1]);
+"""
+
+[[task.tests.cases]]
+name = "conditional_jump"
+code = """
+let mut vm = VM::new();
+// if 5 > 3, push 100, else push 200
+let prog = vec![
+    Opcode::Push(5),     // 0
+    Opcode::Push(3),     // 1
+    Opcode::Gt,          // 2: pushes 1
+    Opcode::JmpIf(6),   // 3: jump to 6 if true
+    Opcode::Push(200),   // 4
+    Opcode::Jmp(7),      // 5: skip over
+    Opcode::Push(100),   // 6: true branch
+    Opcode::Halt,        // 7
+];
+let stack = vm.execute(&prog).unwrap();
+assert_eq!(stack, vec![100]);
+"""
+
+[[task.tests.cases]]
+name = "call_and_return"
+code = """
+let mut vm = VM::new();
+// Main: push 5, call double function at addr 5, halt
+// Double fn at addr 5: dup, add, ret
+let prog = vec![
+    Opcode::Push(5),     // 0
+    Opcode::Call(4),     // 1: call fn at 4, return to 2
+    Opcode::Halt,        // 2
+    Opcode::Halt,        // 3: padding
+    Opcode::Dup,         // 4: fn start - dup top
+    Opcode::Add,         // 5: add (doubles)
+    Opcode::Ret,         // 6: return
+];
+let stack = vm.execute(&prog).unwrap();
+assert_eq!(stack, vec![10]);
+"""
+
+[[task.tests.cases]]
+name = "division_by_zero"
+code = """
+let mut vm = VM::new();
+let prog = vec![
+    Opcode::Push(10),
+    Opcode::Push(0),
+    Opcode::Div,
+    Opcode::Halt,
+];
+let result = vm.execute(&prog);
+assert!(result.is_err());
+"""
+
+[[task.tests.cases]]
+name = "stack_underflow_error"
+code = """
+let mut vm = VM::new();
+let prog = vec![
+    Opcode::Push(1),
+    Opcode::Add, // only one value on stack
+    Opcode::Halt,
+];
+let result = vm.execute(&prog);
+assert!(result.is_err());
+"""
+
+[[task.tests.cases]]
+name = "comparison_ops"
+code = """
+let mut vm = VM::new();
+let prog = vec![
+    Opcode::Push(3),
+    Opcode::Push(3),
+    Opcode::Eq,       // 3 == 3 -> 1
+    Opcode::Push(2),
+    Opcode::Push(5),
+    Opcode::Lt,       // 2 < 5 -> 1
+    Opcode::Add,      // 1 + 1 = 2
+    Opcode::Halt,
+];
+let stack = vm.execute(&prog).unwrap();
+assert_eq!(stack, vec![2]);
+"""

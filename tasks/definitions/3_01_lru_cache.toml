@@ -1,0 +1,88 @@
+[task]
+id = "3_01_lru_cache"
+tier = 3
+title = "LRU Cache"
+language = "rust"
+
+[task.description]
+text = """
+Implement a Least Recently Used (LRU) cache with O(1) average time complexity
+for both `get` and `put` operations.
+
+Define a struct `LruCache` with the following methods:
+
+- `new(capacity: usize) -> Self` — Create a new LRU cache with the given capacity.
+- `get(&mut self, key: &i32) -> Option<&i32>` — Return a reference to the value
+  associated with `key` if it exists, and mark it as recently used. Return `None`
+  if the key is not present.
+- `put(&mut self, key: i32, value: i32)` — Insert or update the key-value pair.
+  If the cache exceeds its capacity after insertion, evict the least recently used entry.
+
+The cache must use a `HashMap` internally to achieve O(1) lookups.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = ["HashMap"]
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_basic_put_and_get"
+code = """
+let mut cache = LruCache::new(2);
+cache.put(1, 10);
+cache.put(2, 20);
+assert_eq!(cache.get(&1), Some(&10));
+assert_eq!(cache.get(&2), Some(&20));
+"""
+
+[[task.tests.cases]]
+name = "test_eviction_on_capacity"
+code = """
+let mut cache = LruCache::new(2);
+cache.put(1, 10);
+cache.put(2, 20);
+cache.put(3, 30);
+assert_eq!(cache.get(&1), None);
+assert_eq!(cache.get(&2), Some(&20));
+assert_eq!(cache.get(&3), Some(&30));
+"""
+
+[[task.tests.cases]]
+name = "test_access_refreshes_order"
+code = """
+let mut cache = LruCache::new(2);
+cache.put(1, 10);
+cache.put(2, 20);
+let _ = cache.get(&1);
+cache.put(3, 30);
+assert_eq!(cache.get(&1), Some(&10));
+assert_eq!(cache.get(&2), None);
+assert_eq!(cache.get(&3), Some(&30));
+"""
+
+[[task.tests.cases]]
+name = "test_update_existing_key"
+code = """
+let mut cache = LruCache::new(2);
+cache.put(1, 10);
+cache.put(2, 20);
+cache.put(1, 100);
+assert_eq!(cache.get(&1), Some(&100));
+cache.put(3, 30);
+assert_eq!(cache.get(&2), None);
+assert_eq!(cache.get(&1), Some(&100));
+assert_eq!(cache.get(&3), Some(&30));
+"""
+
+[[task.tests.cases]]
+name = "test_capacity_one"
+code = """
+let mut cache = LruCache::new(1);
+cache.put(1, 10);
+assert_eq!(cache.get(&1), Some(&10));
+cache.put(2, 20);
+assert_eq!(cache.get(&1), None);
+assert_eq!(cache.get(&2), Some(&20));
+"""

@@ -1,0 +1,53 @@
+[task]
+id = "1_12_collatz_steps"
+tier = 1
+title = "Collatz Steps"
+language = "rust"
+
+[task.description]
+text = """
+Write a function `collatz_steps(n: u64) -> u64` that counts the number of steps it
+takes to reach 1 in the Collatz sequence starting from `n`. At each step: if the
+current number is even, divide it by 2; if it is odd, multiply by 3 and add 1.
+The input `n` is always >= 1. When `n` is already 1, return 0.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+
+[[task.tests.cases]]
+name = "test_one"
+code = """
+assert_eq!(collatz_steps(1), 0);
+"""
+
+[[task.tests.cases]]
+name = "test_two"
+code = """
+assert_eq!(collatz_steps(2), 1);
+"""
+
+[[task.tests.cases]]
+name = "test_six"
+code = """
+// 6 -> 3 -> 10 -> 5 -> 16 -> 8 -> 4 -> 2 -> 1  (8 steps)
+assert_eq!(collatz_steps(6), 8);
+"""
+
+[[task.tests.cases]]
+name = "test_classic_27"
+code = """
+// 27 is famous for taking 111 steps
+assert_eq!(collatz_steps(27), 111);
+"""
+
+[[task.tests.cases]]
+name = "test_power_of_two"
+code = """
+// 16 -> 8 -> 4 -> 2 -> 1  (4 steps)
+assert_eq!(collatz_steps(16), 4);
+"""

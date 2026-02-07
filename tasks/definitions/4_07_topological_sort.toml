@@ -1,0 +1,93 @@
+[task]
+id = "4_07_topological_sort"
+tier = 4
+title = "Topological Sort"
+language = "rust"
+
+[task.description]
+text = """
+Implement topological sorting of a directed acyclic graph (DAG) using Kahn's
+algorithm (BFS-based).
+
+Signature:
+  fn topo_sort(num_nodes: usize, edges: &[(usize, usize)]) -> Option<Vec<usize>>
+
+Parameters:
+  - num_nodes: number of nodes labeled 0..num_nodes-1
+  - edges: list of directed edges (u, v) meaning u -> v (u must come before v)
+
+Return Some(ordering) with a valid topological ordering, or None if the graph
+contains a cycle.
+
+Kahn's algorithm:
+1. Compute in-degree for each node.
+2. Initialize a queue with all nodes having in-degree 0.
+3. Repeatedly remove a node from the queue, append to result, and decrement
+   in-degrees of its neighbors. If a neighbor's in-degree reaches 0, add to queue.
+4. If result length != num_nodes, a cycle exists.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_empty_graph"
+code = """
+let result = topo_sort(0, &[]);
+assert_eq!(result, Some(vec![]));
+"""
+
+[[task.tests.cases]]
+name = "test_single_node"
+code = """
+let result = topo_sort(1, &[]);
+assert_eq!(result, Some(vec![0]));
+"""
+
+[[task.tests.cases]]
+name = "test_linear_chain"
+code = """
+let result = topo_sort(4, &[(0, 1), (1, 2), (2, 3)]);
+assert_eq!(result, Some(vec![0, 1, 2, 3]));
+"""
+
+[[task.tests.cases]]
+name = "test_cycle_detection"
+code = """
+let result = topo_sort(3, &[(0, 1), (1, 2), (2, 0)]);
+assert_eq!(result, None);
+"""
+
+[[task.tests.cases]]
+name = "test_diamond"
+code = """
+// 0 -> 1, 0 -> 2, 1 -> 3, 2 -> 3
+let result = topo_sort(4, &[(0, 1), (0, 2), (1, 3), (2, 3)]).unwrap();
+assert_eq!(result[0], 0);
+assert_eq!(result[3], 3);
+// 1 and 2 can be in either order
+assert!(result.contains(&1));
+assert!(result.contains(&2));
+"""
+
+[[task.tests.cases]]
+name = "test_disconnected"
+code = """
+// Two separate components: 0->1 and 2->3
+let result = topo_sort(4, &[(0, 1), (2, 3)]).unwrap();
+assert_eq!(result.len(), 4);
+// 0 before 1, 2 before 3
+let pos = |x: usize| result.iter().position(|&n| n == x).unwrap();
+assert!(pos(0) < pos(1));
+assert!(pos(2) < pos(3));
+"""
+
+[[task.tests.cases]]
+name = "test_self_loop"
+code = """
+let result = topo_sort(2, &[(0, 0)]);
+assert_eq!(result, None);
+"""

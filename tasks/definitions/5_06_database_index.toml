@@ -1,0 +1,127 @@
+[task]
+id = "5_06_database_index"
+tier = 5
+title = "B-Tree Key-Value Index"
+language = "rust"
+
+[task.description]
+text = """
+Implement a B-tree based key-value index with proper splitting and merging.
+
+Implement `struct BTreeIndex<K: Ord + Clone, V: Clone>` with:
+- `fn new(order: usize) -> Self` — create a B-tree with the given order (maximum number of children per node). Minimum order is 3.
+- `fn insert(&mut self, key: K, value: V)` — insert or update a key-value pair. If the key exists, replace its value.
+- `fn get(&self, key: &K) -> Option<&V>` — look up a value by key.
+- `fn remove(&mut self, key: &K) -> Option<V>` — remove a key and return its value if present.
+- `fn range(&self, start: &K, end: &K) -> Vec<(&K, &V)>` — return all key-value pairs where start <= key <= end, in sorted order.
+- `fn len(&self) -> usize` — return the number of key-value pairs stored.
+
+The B-tree must maintain its invariants:
+- All leaves are at the same depth.
+- Each internal node (except root) has between ceil(order/2) and order children.
+- Keys within each node are sorted.
+- Node splitting must happen on overflow during insert.
+- Node merging or redistribution must happen on underflow during remove.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "insert_and_get"
+code = """
+let mut tree = BTreeIndex::<i32, String>::new(3);
+tree.insert(5, "five".into());
+tree.insert(3, "three".into());
+tree.insert(7, "seven".into());
+tree.insert(1, "one".into());
+tree.insert(9, "nine".into());
+
+assert_eq!(tree.get(&5), Some(&"five".to_string()));
+assert_eq!(tree.get(&1), Some(&"one".to_string()));
+assert_eq!(tree.get(&9), Some(&"nine".to_string()));
+assert_eq!(tree.get(&4), None);
+assert_eq!(tree.len(), 5);
+"""
+
+[[task.tests.cases]]
+name = "range_query"
+code = """
+let mut tree = BTreeIndex::<i32, i32>::new(4);
+for i in 0..20 {
+    tree.insert(i, i * 10);
+}
+let results = tree.range(&5, &10);
+let keys: Vec<i32> = results.iter().map(|(&k, _)| k).collect();
+assert_eq!(keys, vec![5, 6, 7, 8, 9, 10]);
+let vals: Vec<i32> = results.iter().map(|(_, &v)| v).collect();
+assert_eq!(vals, vec![50, 60, 70, 80, 90, 100]);
+"""
+
+[[task.tests.cases]]
+name = "remove_and_rebalance"
+code = """
+let mut tree = BTreeIndex::<i32, &str>::new(3);
+for i in 0..10 {
+    tree.insert(i, "val");
+}
+assert_eq!(tree.len(), 10);
+
+assert_eq!(tree.remove(&5), Some("val"));
+assert_eq!(tree.get(&5), None);
+assert_eq!(tree.len(), 9);
+
+assert_eq!(tree.remove(&0), Some("val"));
+assert_eq!(tree.remove(&9), Some("val"));
+assert_eq!(tree.len(), 7);
+
+// Verify remaining elements are intact
+for i in [1, 2, 3, 4, 6, 7, 8] {
+    assert!(tree.get(&i).is_some(), "key {} should exist", i);
+}
+"""
+
+[[task.tests.cases]]
+name = "update_existing_key"
+code = """
+let mut tree = BTreeIndex::<String, i32>::new(3);
+tree.insert("key".into(), 1);
+assert_eq!(tree.get(&"key".to_string()), Some(&1));
+tree.insert("key".into(), 2);
+assert_eq!(tree.get(&"key".to_string()), Some(&2));
+assert_eq!(tree.len(), 1);
+"""
+
+[[task.tests.cases]]
+name = "many_insertions_and_deletions"
+code = """
+let mut tree = BTreeIndex::<i32, i32>::new(4);
+for i in 0..100 {
+    tree.insert(i, i);
+}
+assert_eq!(tree.len(), 100);
+
+for i in (0..100).step_by(2) {
+    tree.remove(&i);
+}
+assert_eq!(tree.len(), 50);
+
+for i in (1..100).step_by(2) {
+    assert_eq!(tree.get(&i), Some(&i));
+}
+for i in (0..100).step_by(2) {
+    assert_eq!(tree.get(&i), None);
+}
+"""
+
+[[task.tests.cases]]
+name = "remove_nonexistent"
+code = """
+let mut tree = BTreeIndex::<i32, i32>::new(3);
+tree.insert(1, 10);
+assert_eq!(tree.remove(&999), None);
+assert_eq!(tree.len(), 1);
+"""

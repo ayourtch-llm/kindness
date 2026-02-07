@@ -1,0 +1,145 @@
+[task]
+id = "5_07_async_task_scheduler"
+tier = 5
+title = "Cooperative Task Scheduler"
+language = "rust"
+
+[task.description]
+text = """
+Build a cooperative task scheduler with priority-based execution.
+
+Define:
+```rust
+pub enum TaskState {
+    Yield,
+    Complete(i64),
+}
+
+pub struct TaskContext {
+    emitted: Vec<i64>,
+}
+
+impl TaskContext {
+    pub fn emit(&mut self, val: i64) {
+        self.emitted.push(val);
+    }
+}
+```
+
+Implement `struct Scheduler` with:
+- `fn new() -> Self`
+- `fn spawn(&mut self, priority: u8, task: Box<dyn FnMut(&mut TaskContext) -> TaskState>)` — add a task with the given priority (higher number = higher priority).
+- `fn run(&mut self) -> Vec<i64>` — run all tasks cooperatively until all complete. In each scheduling round, pick the highest-priority ready task and call it once. If it returns `Yield`, put it back in the queue. If it returns `Complete(val)`, record val as the task's final value. Collect all emitted values (from `TaskContext::emit`) and completion values in the order they were produced. Return the collected values.
+
+When multiple tasks share the same priority, run them in FIFO order (the order they were spawned).
+
+Each task gets its own `TaskContext` that persists across yields.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "single_task_completes"
+code = """
+let mut sched = Scheduler::new();
+sched.spawn(1, Box::new(|ctx: &mut TaskContext| {
+    ctx.emit(42);
+    TaskState::Complete(100)
+}));
+let results = sched.run();
+assert_eq!(results, vec![42, 100]);
+"""
+
+[[task.tests.cases]]
+name = "priority_ordering"
+code = """
+let mut sched = Scheduler::new();
+sched.spawn(1, Box::new(|ctx: &mut TaskContext| {
+    ctx.emit(1);
+    TaskState::Complete(10)
+}));
+sched.spawn(3, Box::new(|ctx: &mut TaskContext| {
+    ctx.emit(3);
+    TaskState::Complete(30)
+}));
+sched.spawn(2, Box::new(|ctx: &mut TaskContext| {
+    ctx.emit(2);
+    TaskState::Complete(20)
+}));
+let results = sched.run();
+// Highest priority runs first: 3, then 2, then 1
+assert_eq!(results, vec![3, 30, 2, 20, 1, 10]);
+"""
+
+[[task.tests.cases]]
+name = "yielding_tasks"
+code = """
+let mut sched = Scheduler::new();
+let mut count = 0;
+sched.spawn(1, Box::new(move |ctx: &mut TaskContext| {
+    count += 1;
+    ctx.emit(count);
+    if count >= 3 {
+        TaskState::Complete(count * 10)
+    } else {
+        TaskState::Yield
+    }
+}));
+let results = sched.run();
+assert_eq!(results, vec![1, 2, 3, 30]);
+"""
+
+[[task.tests.cases]]
+name = "interleaved_by_priority"
+code = """
+let mut sched = Scheduler::new();
+let mut hi_count = 0;
+let mut lo_count = 0;
+sched.spawn(1, Box::new(move |ctx: &mut TaskContext| {
+    lo_count += 1;
+    ctx.emit(lo_count * 100);
+    if lo_count >= 2 { TaskState::Complete(0) } else { TaskState::Yield }
+}));
+sched.spawn(2, Box::new(move |ctx: &mut TaskContext| {
+    hi_count += 1;
+    ctx.emit(hi_count);
+    if hi_count >= 2 { TaskState::Complete(0) } else { TaskState::Yield }
+}));
+let results = sched.run();
+// Round 1: hi(p=2) emits 1 yields, Round 2: hi(p=2) emits 2 completes(0),
+// Round 3: lo(p=1) emits 100 yields, Round 4: lo(p=1) emits 200 completes(0)
+assert_eq!(results, vec![1, 2, 0, 100, 200, 0]);
+"""
+
+[[task.tests.cases]]
+name = "same_priority_fifo"
+code = """
+let mut sched = Scheduler::new();
+sched.spawn(1, Box::new(|ctx: &mut TaskContext| {
+    ctx.emit(1);
+    TaskState::Complete(0)
+}));
+sched.spawn(1, Box::new(|ctx: &mut TaskContext| {
+    ctx.emit(2);
+    TaskState::Complete(0)
+}));
+sched.spawn(1, Box::new(|ctx: &mut TaskContext| {
+    ctx.emit(3);
+    TaskState::Complete(0)
+}));
+let results = sched.run();
+// Same priority -> FIFO order
+assert_eq!(results, vec![1, 0, 2, 0, 3, 0]);
+"""
+
+[[task.tests.cases]]
+name = "empty_scheduler"
+code = """
+let mut sched = Scheduler::new();
+let results = sched.run();
+assert!(results.is_empty());
+"""

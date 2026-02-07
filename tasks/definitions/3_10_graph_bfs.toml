@@ -1,0 +1,87 @@
+[task]
+id = "3_10_graph_bfs"
+tier = 3
+title = "Graph BFS Traversal"
+language = "rust"
+
+[task.description]
+text = """
+Implement breadth-first search (BFS) on a graph represented as an adjacency list.
+
+Implement the function:
+
+`fn bfs(graph: &HashMap<i32, Vec<i32>>, start: i32) -> Vec<i32>`
+
+The function takes a reference to an adjacency list (a `HashMap` mapping each
+node to a vector of its neighbors) and a starting node. It returns a vector of
+node values in the order they are visited during BFS.
+
+Each node should be visited at most once. If a node has multiple neighbors,
+visit them in the order they appear in the adjacency list. If the start node
+is not in the graph, return an empty vector.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = ["HashMap"]
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_simple_graph"
+code = """
+use std::collections::HashMap;
+let mut graph = HashMap::new();
+graph.insert(1, vec![2, 3]);
+graph.insert(2, vec![4]);
+graph.insert(3, vec![4]);
+graph.insert(4, vec![]);
+let result = bfs(&graph, 1);
+assert_eq!(result, vec![1, 2, 3, 4]);
+"""
+
+[[task.tests.cases]]
+name = "test_single_node"
+code = """
+use std::collections::HashMap;
+let mut graph = HashMap::new();
+graph.insert(1, vec![]);
+let result = bfs(&graph, 1);
+assert_eq!(result, vec![1]);
+"""
+
+[[task.tests.cases]]
+name = "test_disconnected_start"
+code = """
+use std::collections::HashMap;
+let mut graph = HashMap::new();
+graph.insert(1, vec![2]);
+graph.insert(2, vec![]);
+let result = bfs(&graph, 99);
+assert_eq!(result, vec![]);
+"""
+
+[[task.tests.cases]]
+name = "test_cycle"
+code = """
+use std::collections::HashMap;
+let mut graph = HashMap::new();
+graph.insert(1, vec![2]);
+graph.insert(2, vec![3]);
+graph.insert(3, vec![1]);
+let result = bfs(&graph, 1);
+assert_eq!(result, vec![1, 2, 3]);
+"""
+
+[[task.tests.cases]]
+name = "test_diamond_graph"
+code = """
+use std::collections::HashMap;
+let mut graph = HashMap::new();
+graph.insert(0, vec![1, 2]);
+graph.insert(1, vec![3]);
+graph.insert(2, vec![3]);
+graph.insert(3, vec![]);
+let result = bfs(&graph, 0);
+assert_eq!(result, vec![0, 1, 2, 3]);
+"""

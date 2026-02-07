@@ -1,0 +1,113 @@
+[task]
+id = "4_10_a_star_pathfinding"
+tier = 4
+title = "A* Pathfinding on a 2D Grid"
+language = "rust"
+
+[task.description]
+text = """
+Implement A* pathfinding on a 2D grid.
+
+Signature:
+  fn astar(grid: &[Vec<bool>], start: (usize, usize), goal: (usize, usize)) -> Option<Vec<(usize, usize)>>
+
+Parameters:
+  - grid: 2D grid where true = walkable cell, false = wall/obstacle.
+    grid[row][col].
+  - start: (row, col) starting position.
+  - goal: (row, col) target position.
+
+Return Some(path) containing the sequence of (row, col) positions from start to
+goal inclusive, or None if no path exists. Movement is 4-directional (up, down,
+left, right), each step costs 1.
+
+Use Manhattan distance as the heuristic: |row1 - row2| + |col1 - col2|.
+Use a priority queue (BinaryHeap) for the open set. The path returned should be
+one of the shortest paths.
+
+If start == goal, return Some(vec![start]).
+If start or goal is a wall, return None.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = ["BinaryHeap"]
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_trivial"
+code = """
+let grid = vec![vec![true]];
+let path = astar(&grid, (0, 0), (0, 0)).unwrap();
+assert_eq!(path, vec![(0, 0)]);
+"""
+
+[[task.tests.cases]]
+name = "test_straight_line"
+code = """
+let grid = vec![vec![true; 5]];
+let path = astar(&grid, (0, 0), (0, 4)).unwrap();
+assert_eq!(path.len(), 5);
+assert_eq!(path[0], (0, 0));
+assert_eq!(path[4], (0, 4));
+"""
+
+[[task.tests.cases]]
+name = "test_around_wall"
+code = """
+let grid = vec![
+    vec![true, true, true],
+    vec![false, false, true],
+    vec![true, true, true],
+];
+let path = astar(&grid, (0, 0), (2, 0)).unwrap();
+// Must go right, down, down, left, left
+assert_eq!(path.first(), Some(&(0, 0)));
+assert_eq!(path.last(), Some(&(2, 0)));
+assert_eq!(path.len(), 7); // shortest path length
+"""
+
+[[task.tests.cases]]
+name = "test_no_path"
+code = """
+let grid = vec![
+    vec![true, false, true],
+    vec![true, false, true],
+    vec![true, false, true],
+];
+let result = astar(&grid, (0, 0), (0, 2));
+assert!(result.is_none());
+"""
+
+[[task.tests.cases]]
+name = "test_start_is_wall"
+code = """
+let grid = vec![
+    vec![false, true],
+    vec![true, true],
+];
+let result = astar(&grid, (0, 0), (1, 1));
+assert!(result.is_none());
+"""
+
+[[task.tests.cases]]
+name = "test_larger_grid"
+code = """
+let grid = vec![
+    vec![true,  true,  true,  true, true],
+    vec![true,  false, false, false, true],
+    vec![true,  true,  true,  false, true],
+    vec![false, false, true,  false, true],
+    vec![true,  true,  true,  true,  true],
+];
+let path = astar(&grid, (0, 0), (4, 4)).unwrap();
+assert_eq!(path.first(), Some(&(0, 0)));
+assert_eq!(path.last(), Some(&(4, 4)));
+// Verify path is connected: each step differs by exactly 1 in one coordinate
+for w in path.windows(2) {
+    let dr = (w[0].0 as i32 - w[1].0 as i32).abs();
+    let dc = (w[0].1 as i32 - w[1].1 as i32).abs();
+    assert_eq!(dr + dc, 1);
+}
+"""

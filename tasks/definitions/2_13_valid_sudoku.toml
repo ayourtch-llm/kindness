@@ -1,0 +1,106 @@
+[task]
+id = "2_13_valid_sudoku"
+tier = 2
+title = "Valid Sudoku"
+language = "rust"
+
+[task.description]
+text = """
+Determine if a 9x9 Sudoku board is valid. Only the filled cells need to be
+validated according to the following rules:
+- Each row must contain the digits 1-9 without repetition.
+- Each column must contain the digits 1-9 without repetition.
+- Each of the nine 3x3 sub-boxes must contain the digits 1-9 without repetition.
+The character '.' represents an empty cell.
+
+Implement: fn is_valid_sudoku(board: &[[char; 9]; 9]) -> bool
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_valid_board"
+code = """
+let board = [
+    ['5','3','.','.','7','.','.','.','.'],
+    ['6','.','.','1','9','5','.','.','.'],
+    ['.','9','8','.','.','.','.','6','.'],
+    ['8','.','.','.','6','.','.','.','3'],
+    ['4','.','.','8','.','3','.','.','1'],
+    ['7','.','.','.','2','.','.','.','6'],
+    ['.','6','.','.','.','.','2','8','.'],
+    ['.','.','.','4','1','9','.','.','5'],
+    ['.','.','.','.','8','.','.','7','9'],
+];
+assert!(is_valid_sudoku(&board));
+"""
+
+[[task.tests.cases]]
+name = "test_duplicate_in_row"
+code = """
+let board = [
+    ['5','3','.','.','7','.','.','3','.'],
+    ['6','.','.','1','9','5','.','.','.'],
+    ['.','9','8','.','.','.','.','6','.'],
+    ['8','.','.','.','6','.','.','.','3'],
+    ['4','.','.','8','.','3','.','.','1'],
+    ['7','.','.','.','2','.','.','.','6'],
+    ['.','6','.','.','.','.','2','8','.'],
+    ['.','.','.','4','1','9','.','.','5'],
+    ['.','.','.','.','8','.','.','7','9'],
+];
+assert!(!is_valid_sudoku(&board));
+"""
+
+[[task.tests.cases]]
+name = "test_duplicate_in_column"
+code = """
+let board = [
+    ['5','3','.','.','7','.','.','.','.'],
+    ['6','.','.','1','9','5','.','.','.'],
+    ['.','9','8','.','.','.','.','6','.'],
+    ['8','.','.','.','6','.','.','.','3'],
+    ['4','.','.','8','.','3','.','.','1'],
+    ['7','.','.','.','2','.','.','.','6'],
+    ['.','6','.','.','.','.','2','8','.'],
+    ['.','.','.','4','1','9','.','.','5'],
+    ['5','.','.','.','8','.','.','7','9'],
+];
+assert!(!is_valid_sudoku(&board));
+"""
+
+[[task.tests.cases]]
+name = "test_duplicate_in_box"
+code = """
+let board = [
+    ['5','3','.','.','7','.','.','.','.'],
+    ['6','.','.','1','9','5','.','.','.'],
+    ['.','3','8','.','.','.','.','6','.'],
+    ['8','.','.','.','6','.','.','.','3'],
+    ['4','.','.','8','.','3','.','.','1'],
+    ['7','.','.','.','2','.','.','.','6'],
+    ['.','6','.','.','.','.','2','8','.'],
+    ['.','.','.','4','1','9','.','.','5'],
+    ['.','.','.','.','8','.','.','7','9'],
+];
+assert!(!is_valid_sudoku(&board));
+"""
+
+[[task.tests.cases]]
+name = "test_all_empty"
+code = """
+let board = [['.'; 9]; 9];
+assert!(is_valid_sudoku(&board));
+"""
+
+[[task.tests.cases]]
+name = "test_single_filled_row"
+code = """
+let mut board = [['.'; 9]; 9];
+board[0] = ['1','2','3','4','5','6','7','8','9'];
+assert!(is_valid_sudoku(&board));
+"""

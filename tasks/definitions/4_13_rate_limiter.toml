@@ -1,0 +1,117 @@
+[task]
+id = "4_13_rate_limiter"
+tier = 4
+title = "Token Bucket Rate Limiter"
+language = "rust"
+
+[task.description]
+text = """
+Implement a token bucket rate limiter. The token bucket algorithm controls the
+rate of actions by maintaining a bucket of tokens that refills at a steady rate.
+
+Struct: RateLimiter
+
+Methods:
+  - new(rate: f64, capacity: f64) -> Self
+      Create a rate limiter. `rate` is tokens added per second. `capacity` is
+      the maximum number of tokens the bucket can hold. The bucket starts full.
+  - try_acquire(&mut self) -> bool
+      Try to acquire a single token. Returns true if successful, false if the
+      bucket is empty. Before checking, refill tokens based on elapsed time
+      since last refill.
+  - try_acquire_n(&mut self, n: f64) -> bool
+      Try to acquire n tokens at once. Returns true if enough tokens are
+      available, false otherwise. This is atomic: either all n tokens are
+      consumed or none are.
+
+Use std::time::Instant to track elapsed time for token refilling. Tokens
+accumulate over time up to the capacity limit.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = ["Instant"]
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_initial_full"
+code = """
+let mut rl = RateLimiter::new(10.0, 5.0);
+// Bucket starts full with 5 tokens
+for _ in 0..5 {
+    assert!(rl.try_acquire());
+}
+// 6th should fail
+assert!(!rl.try_acquire());
+"""
+
+[[task.tests.cases]]
+name = "test_refill"
+code = """
+use std::thread;
+use std::time::Duration;
+
+let mut rl = RateLimiter::new(10.0, 5.0);
+// Drain all tokens
+for _ in 0..5 {
+    rl.try_acquire();
+}
+assert!(!rl.try_acquire());
+
+// Wait 200ms => should gain ~2 tokens (10 tokens/sec * 0.2s)
+thread::sleep(Duration::from_millis(200));
+assert!(rl.try_acquire());
+"""
+
+[[task.tests.cases]]
+name = "test_acquire_n"
+code = """
+let mut rl = RateLimiter::new(100.0, 10.0);
+// Start with 10 tokens, try to acquire 5
+assert!(rl.try_acquire_n(5.0));
+// 5 remaining, try to acquire 6 => fail (no partial)
+assert!(!rl.try_acquire_n(6.0));
+// 5 still remaining (atomic), acquire 5 => success
+assert!(rl.try_acquire_n(5.0));
+"""
+
+[[task.tests.cases]]
+name = "test_capacity_cap"
+code = """
+use std::thread;
+use std::time::Duration;
+
+let mut rl = RateLimiter::new(1000.0, 3.0);
+// Starts full at 3
+// Even after waiting, should not exceed capacity
+thread::sleep(Duration::from_millis(100));
+// Should be capped at 3
+assert!(rl.try_acquire_n(3.0));
+assert!(!rl.try_acquire());
+"""
+
+[[task.tests.cases]]
+name = "test_zero_tokens_requested"
+code = """
+let mut rl = RateLimiter::new(1.0, 1.0);
+// Acquiring 0 tokens should always succeed
+assert!(rl.try_acquire_n(0.0));
+"""
+
+[[task.tests.cases]]
+name = "test_high_rate"
+code = """
+use std::thread;
+use std::time::Duration;
+
+let mut rl = RateLimiter::new(1000.0, 100.0);
+// Drain
+for _ in 0..100 {
+    rl.try_acquire();
+}
+assert!(!rl.try_acquire());
+// Wait 50ms => ~50 tokens
+thread::sleep(Duration::from_millis(50));
+assert!(rl.try_acquire_n(30.0));
+"""
