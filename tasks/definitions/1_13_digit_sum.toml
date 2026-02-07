@@ -1,0 +1,53 @@
+[task]
+id = "1_13_digit_sum"
+tier = 1
+title = "Digital Root"
+language = "rust"
+
+[task.description]
+text = """
+Write a function `digital_root(n: u64) -> u64` that repeatedly sums the digits of a
+number until a single digit remains, then returns that digit. For example,
+942 -> 9+4+2 = 15 -> 1+5 = 6, so `digital_root(942)` returns 6. For single-digit
+inputs, return the number itself.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+
+[[task.tests.cases]]
+name = "test_single_digit"
+code = """
+assert_eq!(digital_root(0), 0);
+assert_eq!(digital_root(5), 5);
+"""
+
+[[task.tests.cases]]
+name = "test_two_digits"
+code = """
+assert_eq!(digital_root(16), 7);
+assert_eq!(digital_root(99), 9);
+"""
+
+[[task.tests.cases]]
+name = "test_942"
+code = """
+assert_eq!(digital_root(942), 6);
+"""
+
+[[task.tests.cases]]
+name = "test_large_number"
+code = """
+assert_eq!(digital_root(493193), 2);
+"""
+
+[[task.tests.cases]]
+name = "test_all_nines"
+code = """
+assert_eq!(digital_root(999), 9);
+assert_eq!(digital_root(9999999), 9);
+"""

@@ -1,0 +1,57 @@
+[task]
+id = "1_15_pangram_check"
+tier = 1
+title = "Pangram Check"
+language = "rust"
+
+[task.description]
+text = """
+Write a function `is_pangram(s: &str) -> bool` that returns `true` if the input string
+is a pangram — that is, it contains every letter of the English alphabet (a–z) at
+least once. The check should be case-insensitive. Non-alphabetic characters should be
+ignored.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+
+[[task.tests.cases]]
+name = "test_classic_pangram"
+code = """
+assert!(is_pangram("The quick brown fox jumps over the lazy dog"));
+"""
+
+[[task.tests.cases]]
+name = "test_not_pangram"
+code = """
+assert!(!is_pangram("The quick brown fox jumps over the lazy do"));
+"""
+
+[[task.tests.cases]]
+name = "test_empty_string"
+code = """
+assert!(!is_pangram(""));
+"""
+
+[[task.tests.cases]]
+name = "test_mixed_case_pangram"
+code = """
+assert!(is_pangram("THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG"));
+"""
+
+[[task.tests.cases]]
+name = "test_with_numbers_and_symbols"
+code = """
+assert!(is_pangram("7h3 qu1ck br0wn f0x jumps 0v3r th3 l@zy d0g abcdefghijklmnopqrstuvwxyz"));
+"""
+
+[[task.tests.cases]]
+name = "test_alphabet_only"
+code = """
+assert!(is_pangram("abcdefghijklmnopqrstuvwxyz"));
+assert!(!is_pangram("abcdefghijklmnopqrstuvwxy"));
+"""
