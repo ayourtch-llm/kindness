@@ -1,0 +1,70 @@
+[task]
+id = "2_15_zigzag_conversion"
+tier = 2
+title = "Zigzag Conversion"
+language = "rust"
+
+[task.description]
+text = """
+The string "PAYPALISHIRING" is written in a zigzag pattern on a given
+number of rows like this:
+
+P   A   H   N
+A P L S I I G
+Y   I   R
+
+And then read line by line: "PAHNAPLSIIGYIR"
+
+Given a string and a number of rows, return the string rearranged in this
+zigzag pattern and read row by row.
+
+Implement: fn zigzag_convert(s: &str, num_rows: usize) -> String
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_basic_3_rows"
+code = """
+assert_eq!(zigzag_convert("PAYPALISHIRING", 3), "PAHNAPLSIIGYIR");
+"""
+
+[[task.tests.cases]]
+name = "test_basic_4_rows"
+code = """
+assert_eq!(zigzag_convert("PAYPALISHIRING", 4), "PINALSIGYAHRPI");
+"""
+
+[[task.tests.cases]]
+name = "test_single_row"
+code = """
+assert_eq!(zigzag_convert("ABCDEF", 1), "ABCDEF");
+"""
+
+[[task.tests.cases]]
+name = "test_rows_exceed_length"
+code = """
+assert_eq!(zigzag_convert("AB", 5), "AB");
+"""
+
+[[task.tests.cases]]
+name = "test_two_rows"
+code = """
+assert_eq!(zigzag_convert("ABCDEF", 2), "ACEBDF");
+"""
+
+[[task.tests.cases]]
+name = "test_single_char"
+code = """
+assert_eq!(zigzag_convert("A", 1), "A");
+"""
+
+[[task.tests.cases]]
+name = "test_empty_string"
+code = """
+assert_eq!(zigzag_convert("", 3), "");
+"""
