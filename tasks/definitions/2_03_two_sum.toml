@@ -1,0 +1,58 @@
+[task]
+id = "2_03_two_sum"
+tier = 2
+title = "Two Sum"
+language = "rust"
+
+[task.description]
+text = """
+Given a slice of integers and a target integer, find two distinct indices
+whose corresponding values sum to the target. Return the pair of indices
+wrapped in Some (smaller index first), or None if no such pair exists.
+
+Each input has at most one valid answer. You may not use the same element twice.
+
+Implement: fn two_sum(nums: &[i32], target: i32) -> Option<(usize, usize)>
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_basic"
+code = """
+assert_eq!(two_sum(&[2, 7, 11, 15], 9), Some((0, 1)));
+"""
+
+[[task.tests.cases]]
+name = "test_middle_elements"
+code = """
+assert_eq!(two_sum(&[3, 2, 4], 6), Some((1, 2)));
+"""
+
+[[task.tests.cases]]
+name = "test_no_solution"
+code = """
+assert_eq!(two_sum(&[1, 2, 3], 100), None);
+"""
+
+[[task.tests.cases]]
+name = "test_negative_numbers"
+code = """
+assert_eq!(two_sum(&[-1, -2, -3, -4, -5], -8), Some((2, 4)));
+"""
+
+[[task.tests.cases]]
+name = "test_empty_slice"
+code = """
+assert_eq!(two_sum(&[], 0), None);
+"""
+
+[[task.tests.cases]]
+name = "test_single_element"
+code = """
+assert_eq!(two_sum(&[5], 5), None);
+"""

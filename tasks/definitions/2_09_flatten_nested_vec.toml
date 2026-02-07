@@ -1,0 +1,57 @@
+[task]
+id = "2_09_flatten_nested_vec"
+tier = 2
+title = "Flatten Nested Vec"
+language = "rust"
+
+[task.description]
+text = """
+Given a Vec<Vec<i32>>, flatten it into a single Vec<i32> containing all
+elements in order (first all elements of the first inner vec, then all
+elements of the second inner vec, and so on).
+
+Implement: fn flatten(nested: Vec<Vec<i32>>) -> Vec<i32>
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_basic"
+code = """
+assert_eq!(flatten(vec![vec![1, 2], vec![3, 4], vec![5]]), vec![1, 2, 3, 4, 5]);
+"""
+
+[[task.tests.cases]]
+name = "test_empty_outer"
+code = """
+let empty: Vec<Vec<i32>> = vec![];
+assert_eq!(flatten(empty), vec![]);
+"""
+
+[[task.tests.cases]]
+name = "test_empty_inner_vecs"
+code = """
+assert_eq!(flatten(vec![vec![], vec![], vec![]]), vec![]);
+"""
+
+[[task.tests.cases]]
+name = "test_mixed_empty_and_nonempty"
+code = """
+assert_eq!(flatten(vec![vec![], vec![1], vec![], vec![2, 3]]), vec![1, 2, 3]);
+"""
+
+[[task.tests.cases]]
+name = "test_single_inner"
+code = """
+assert_eq!(flatten(vec![vec![10, 20, 30]]), vec![10, 20, 30]);
+"""
+
+[[task.tests.cases]]
+name = "test_negative_numbers"
+code = """
+assert_eq!(flatten(vec![vec![-1, -2], vec![0], vec![1, 2]]), vec![-1, -2, 0, 1, 2]);
+"""

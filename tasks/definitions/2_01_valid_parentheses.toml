@@ -1,0 +1,66 @@
+[task]
+id = "2_01_valid_parentheses"
+tier = 2
+title = "Valid Parentheses"
+language = "rust"
+
+[task.description]
+text = """
+Given a string containing only the characters '(', ')', '{', '}', '[' and ']',
+determine if the input string is valid.
+
+A string is valid if:
+- Open brackets are closed by the same type of brackets.
+- Open brackets are closed in the correct order.
+- Every close bracket has a corresponding open bracket of the same type.
+
+Implement: fn is_valid(s: &str) -> bool
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_simple_parens"
+code = """
+assert_eq!(is_valid("()"), true);
+"""
+
+[[task.tests.cases]]
+name = "test_multiple_types"
+code = """
+assert_eq!(is_valid("()[]{}"), true);
+"""
+
+[[task.tests.cases]]
+name = "test_nested"
+code = """
+assert_eq!(is_valid("{[()]}"), true);
+"""
+
+[[task.tests.cases]]
+name = "test_mismatched"
+code = """
+assert_eq!(is_valid("(]"), false);
+"""
+
+[[task.tests.cases]]
+name = "test_unclosed"
+code = """
+assert_eq!(is_valid("("), false);
+"""
+
+[[task.tests.cases]]
+name = "test_empty_string"
+code = """
+assert_eq!(is_valid(""), true);
+"""
+
+[[task.tests.cases]]
+name = "test_close_before_open"
+code = """
+assert_eq!(is_valid(")("), false);
+"""

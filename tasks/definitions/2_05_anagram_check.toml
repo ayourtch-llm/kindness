@@ -1,0 +1,56 @@
+[task]
+id = "2_05_anagram_check"
+tier = 2
+title = "Anagram Check"
+language = "rust"
+
+[task.description]
+text = """
+Determine whether two strings are anagrams of each other. Two strings are
+anagrams if they contain exactly the same characters with the same frequencies,
+ignoring case. Non-alphabetic characters should be ignored.
+
+Implement: fn is_anagram(s: &str, t: &str) -> bool
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_basic_anagram"
+code = """
+assert_eq!(is_anagram("listen", "silent"), true);
+"""
+
+[[task.tests.cases]]
+name = "test_not_anagram"
+code = """
+assert_eq!(is_anagram("hello", "world"), false);
+"""
+
+[[task.tests.cases]]
+name = "test_different_lengths"
+code = """
+assert_eq!(is_anagram("abc", "ab"), false);
+"""
+
+[[task.tests.cases]]
+name = "test_case_insensitive"
+code = """
+assert_eq!(is_anagram("Astronomer", "Moon starer"), true);
+"""
+
+[[task.tests.cases]]
+name = "test_empty_strings"
+code = """
+assert_eq!(is_anagram("", ""), true);
+"""
+
+[[task.tests.cases]]
+name = "test_with_spaces_and_punctuation"
+code = """
+assert_eq!(is_anagram("A gentleman", "Elegant man"), true);
+"""

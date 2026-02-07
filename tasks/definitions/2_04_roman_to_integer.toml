@@ -1,0 +1,60 @@
+[task]
+id = "2_04_roman_to_integer"
+tier = 2
+title = "Roman to Integer"
+language = "rust"
+
+[task.description]
+text = """
+Convert a Roman numeral string to its integer value.
+
+Roman numerals use: I=1, V=5, X=10, L=50, C=100, D=500, M=1000.
+Subtractive notation is used where a smaller value before a larger value
+means subtraction (e.g., IV=4, IX=9, XL=40, XC=90, CD=400, CM=900).
+
+You may assume the input is a valid Roman numeral in the range [1, 3999].
+
+Implement: fn roman_to_int(s: &str) -> i32
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_simple"
+code = """
+assert_eq!(roman_to_int("III"), 3);
+"""
+
+[[task.tests.cases]]
+name = "test_subtractive"
+code = """
+assert_eq!(roman_to_int("IV"), 4);
+"""
+
+[[task.tests.cases]]
+name = "test_complex"
+code = """
+assert_eq!(roman_to_int("MCMXCIV"), 1994);
+"""
+
+[[task.tests.cases]]
+name = "test_large"
+code = """
+assert_eq!(roman_to_int("MMMCMXCIX"), 3999);
+"""
+
+[[task.tests.cases]]
+name = "test_single_char"
+code = """
+assert_eq!(roman_to_int("D"), 500);
+"""
+
+[[task.tests.cases]]
+name = "test_lviii"
+code = """
+assert_eq!(roman_to_int("LVIII"), 58);
+"""
