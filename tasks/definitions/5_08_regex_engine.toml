@@ -1,0 +1,105 @@
+[task]
+id = "5_08_regex_engine"
+tier = 5
+title = "Regex Engine"
+language = "rust"
+
+[task.description]
+text = """
+Build a regex engine that compiles patterns to an NFA and executes them.
+
+Implement two public functions:
+- `fn regex_match(pattern: &str, text: &str) -> bool` — returns true if the entire text matches the pattern.
+- `fn regex_find(pattern: &str, text: &str) -> Option<(usize, usize)>` — find the first (leftmost) match in text. Returns `Some((start, end))` where `text[start..end]` is the match. Returns None if no match.
+
+Supported regex syntax:
+- Literal characters (match themselves)
+- `.` matches any single character
+- `*` zero or more of preceding element
+- `+` one or more of preceding element
+- `?` zero or one of preceding element
+- `|` alternation (e.g., `cat|dog`)
+- `()` grouping (e.g., `(ab)+`)
+- `[abc]` character class — matches any single character in the set
+- `[a-z]` character range within a class
+- `[^abc]` negated character class
+
+Build an NFA (nondeterministic finite automaton) internally. Use Thompson's construction or equivalent.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "literal_match"
+code = """
+assert!(regex_match("hello", "hello"));
+assert!(!regex_match("hello", "world"));
+assert!(!regex_match("hello", "hello!"));
+"""
+
+[[task.tests.cases]]
+name = "dot_and_quantifiers"
+code = """
+assert!(regex_match("h.llo", "hello"));
+assert!(regex_match("h.llo", "hallo"));
+assert!(regex_match("ab*c", "ac"));
+assert!(regex_match("ab*c", "abbc"));
+assert!(regex_match("ab+c", "abc"));
+assert!(!regex_match("ab+c", "ac"));
+assert!(regex_match("ab?c", "ac"));
+assert!(regex_match("ab?c", "abc"));
+"""
+
+[[task.tests.cases]]
+name = "alternation_and_grouping"
+code = """
+assert!(regex_match("cat|dog", "cat"));
+assert!(regex_match("cat|dog", "dog"));
+assert!(!regex_match("cat|dog", "cow"));
+assert!(regex_match("(ab)+", "abab"));
+assert!(!regex_match("(ab)+", ""));
+"""
+
+[[task.tests.cases]]
+name = "character_classes"
+code = """
+assert!(regex_match("[abc]", "a"));
+assert!(regex_match("[abc]", "c"));
+assert!(!regex_match("[abc]", "d"));
+assert!(regex_match("[a-z]+", "hello"));
+assert!(!regex_match("[a-z]+", "HELLO"));
+"""
+
+[[task.tests.cases]]
+name = "find_in_text"
+code = """
+let result = regex_find("world", "hello world!");
+assert_eq!(result, Some((6, 11)));
+
+let result2 = regex_find("[0-9]+", "abc 42 def");
+assert_eq!(result2, Some((4, 6)));
+
+let result3 = regex_find("xyz", "hello");
+assert_eq!(result3, None);
+"""
+
+[[task.tests.cases]]
+name = "negated_character_class"
+code = """
+assert!(regex_match("[^0-9]+", "hello"));
+assert!(!regex_match("[^0-9]+", "123"));
+assert!(regex_match("[^abc]", "d"));
+assert!(!regex_match("[^abc]", "a"));
+"""
+
+[[task.tests.cases]]
+name = "complex_patterns"
+code = """
+assert!(regex_match("a(b|c)*d", "ad"));
+assert!(regex_match("a(b|c)*d", "abcbd"));
+assert!(!regex_match("a(b|c)*d", "aed"));
+"""

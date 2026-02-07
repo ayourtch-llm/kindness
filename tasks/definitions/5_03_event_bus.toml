@@ -1,0 +1,201 @@
+[task]
+id = "5_03_event_bus"
+tier = 5
+title = "Typed Event Bus"
+language = "rust"
+
+[task.description]
+text = """
+Build a typed event bus supporting subscribe, publish, and unsubscribe operations using dynamic dispatch and `Any` for type erasure.
+
+Define:
+```rust
+use std::any::Any;
+
+pub trait Event: Any + 'static {
+    fn as_any(&self) -> &dyn Any;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SubscriptionId(pub u64);
+```
+
+Any struct implementing `Event` can be published/subscribed.
+
+Implement `struct EventBus` with:
+- `fn new() -> Self`
+- `fn subscribe<E: Event>(&mut self, handler: Box<dyn Fn(&E)>) -> SubscriptionId` — register a handler for events of type E. Return a unique subscription id.
+- `fn publish<E: Event>(&self, event: &E)` — call all handlers subscribed to type E, in subscription order.
+- `fn unsubscribe(&mut self, id: SubscriptionId)` — remove the handler with the given id.
+
+Use `std::any::TypeId` to dispatch events to the correct handlers. Each call to subscribe must produce a globally unique `SubscriptionId`.
+
+For testing purposes, handlers should use interior mutability (e.g., `Rc<RefCell<Vec<T>>>`) to record that they were called.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "subscribe_and_publish"
+code = """
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::any::Any;
+
+#[derive(Debug)]
+struct Click { x: i32, y: i32 }
+impl Event for Click {
+    fn as_any(&self) -> &dyn Any { self }
+}
+
+let mut bus = EventBus::new();
+let log: Rc<RefCell<Vec<(i32,i32)>>> = Rc::new(RefCell::new(Vec::new()));
+let log_clone = log.clone();
+
+bus.subscribe::<Click>(Box::new(move |e: &Click| {
+    log_clone.borrow_mut().push((e.x, e.y));
+}));
+
+bus.publish(&Click { x: 10, y: 20 });
+bus.publish(&Click { x: 30, y: 40 });
+
+assert_eq!(*log.borrow(), vec![(10,20), (30,40)]);
+"""
+
+[[task.tests.cases]]
+name = "multiple_event_types"
+code = """
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::any::Any;
+
+#[derive(Debug)]
+struct EventA(i32);
+impl Event for EventA {
+    fn as_any(&self) -> &dyn Any { self }
+}
+
+#[derive(Debug)]
+struct EventB(String);
+impl Event for EventB {
+    fn as_any(&self) -> &dyn Any { self }
+}
+
+let mut bus = EventBus::new();
+let a_log: Rc<RefCell<Vec<i32>>> = Rc::new(RefCell::new(Vec::new()));
+let b_log: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(Vec::new()));
+let a_clone = a_log.clone();
+let b_clone = b_log.clone();
+
+bus.subscribe::<EventA>(Box::new(move |e: &EventA| {
+    a_clone.borrow_mut().push(e.0);
+}));
+bus.subscribe::<EventB>(Box::new(move |e: &EventB| {
+    b_clone.borrow_mut().push(e.0.clone());
+}));
+
+bus.publish(&EventA(1));
+bus.publish(&EventB("hello".into()));
+bus.publish(&EventA(2));
+
+assert_eq!(*a_log.borrow(), vec![1, 2]);
+assert_eq!(*b_log.borrow(), vec!["hello".to_string()]);
+"""
+
+[[task.tests.cases]]
+name = "unsubscribe"
+code = """
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::any::Any;
+
+#[derive(Debug)]
+struct Msg(i32);
+impl Event for Msg {
+    fn as_any(&self) -> &dyn Any { self }
+}
+
+let mut bus = EventBus::new();
+let log: Rc<RefCell<Vec<i32>>> = Rc::new(RefCell::new(Vec::new()));
+let log_clone = log.clone();
+
+let id = bus.subscribe::<Msg>(Box::new(move |e: &Msg| {
+    log_clone.borrow_mut().push(e.0);
+}));
+
+bus.publish(&Msg(1));
+bus.unsubscribe(id);
+bus.publish(&Msg(2));
+
+assert_eq!(*log.borrow(), vec![1]);
+"""
+
+[[task.tests.cases]]
+name = "multiple_handlers_same_event"
+code = """
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::any::Any;
+
+#[derive(Debug)]
+struct Ping;
+impl Event for Ping {
+    fn as_any(&self) -> &dyn Any { self }
+}
+
+let mut bus = EventBus::new();
+let count: Rc<RefCell<i32>> = Rc::new(RefCell::new(0));
+let c1 = count.clone();
+let c2 = count.clone();
+
+bus.subscribe::<Ping>(Box::new(move |_: &Ping| {
+    *c1.borrow_mut() += 1;
+}));
+bus.subscribe::<Ping>(Box::new(move |_: &Ping| {
+    *c2.borrow_mut() += 10;
+}));
+
+bus.publish(&Ping);
+assert_eq!(*count.borrow(), 11);
+"""
+
+[[task.tests.cases]]
+name = "unique_subscription_ids"
+code = """
+use std::any::Any;
+
+#[derive(Debug)]
+struct Evt;
+impl Event for Evt {
+    fn as_any(&self) -> &dyn Any { self }
+}
+
+let mut bus = EventBus::new();
+let id1 = bus.subscribe::<Evt>(Box::new(|_: &Evt| {}));
+let id2 = bus.subscribe::<Evt>(Box::new(|_: &Evt| {}));
+let id3 = bus.subscribe::<Evt>(Box::new(|_: &Evt| {}));
+
+assert_ne!(id1, id2);
+assert_ne!(id2, id3);
+assert_ne!(id1, id3);
+"""
+
+[[task.tests.cases]]
+name = "publish_with_no_subscribers"
+code = """
+use std::any::Any;
+
+#[derive(Debug)]
+struct Ghost;
+impl Event for Ghost {
+    fn as_any(&self) -> &dyn Any { self }
+}
+
+let bus = EventBus::new();
+// Should not panic
+bus.publish(&Ghost);
+"""

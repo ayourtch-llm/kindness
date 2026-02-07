@@ -1,0 +1,128 @@
+[task]
+id = "5_09_memory_allocator"
+tier = 5
+title = "Free-List Memory Allocator"
+language = "rust"
+
+[task.description]
+text = """
+Build a simulated memory allocator using a free-list strategy, operating on a logical address space (no real memory, just offset tracking).
+
+Implement `struct Allocator` with:
+- `fn new(size: usize) -> Self` — create an allocator managing `size` bytes of address space, starting with one free block from offset 0 to size-1.
+- `fn alloc(&mut self, size: usize) -> Option<usize>` — allocate a block of the given size using first-fit strategy. Return the starting offset, or None if no free block is large enough. Allocating 0 bytes should return None.
+- `fn free(&mut self, offset: usize)` — free the block at the given offset. If the offset was not previously allocated, do nothing.
+- `fn available(&self) -> usize` — return the total number of free bytes across all free blocks.
+- `fn largest_free_block(&self) -> usize` — return the size of the largest contiguous free block.
+
+Key behaviors:
+- Use first-fit allocation: scan free list from lowest offset and use the first block that is large enough.
+- When freeing, coalesce adjacent free blocks into a single larger block.
+- Track allocated blocks so that `free` knows the size to return.
+
+The forbidden list prohibits use of `unsafe`. All operations must be done in safe Rust.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = ["unsafe"]
+
+[task.tests]
+[[task.tests.cases]]
+name = "basic_alloc_and_free"
+code = """
+let mut alloc = Allocator::new(1024);
+assert_eq!(alloc.available(), 1024);
+
+let a = alloc.alloc(100).unwrap();
+assert_eq!(a, 0);
+assert_eq!(alloc.available(), 924);
+
+alloc.free(a);
+assert_eq!(alloc.available(), 1024);
+"""
+
+[[task.tests.cases]]
+name = "multiple_allocations"
+code = """
+let mut alloc = Allocator::new(1000);
+let a = alloc.alloc(200).unwrap();
+let b = alloc.alloc(300).unwrap();
+let c = alloc.alloc(400).unwrap();
+
+assert_eq!(a, 0);
+assert_eq!(b, 200);
+assert_eq!(c, 500);
+assert_eq!(alloc.available(), 100);
+"""
+
+[[task.tests.cases]]
+name = "coalescing"
+code = """
+let mut alloc = Allocator::new(1000);
+let a = alloc.alloc(300).unwrap();
+let b = alloc.alloc(300).unwrap();
+let c = alloc.alloc(300).unwrap();
+assert_eq!(alloc.available(), 100);
+
+// Free middle block, then neighbors
+alloc.free(b);
+assert_eq!(alloc.available(), 400);
+assert_eq!(alloc.largest_free_block(), 300);
+
+alloc.free(a);
+// a and b should coalesce: 600 contiguous from offset 0
+assert_eq!(alloc.available(), 700);
+assert_eq!(alloc.largest_free_block(), 600);
+
+alloc.free(c);
+// Everything coalesced
+assert_eq!(alloc.available(), 1000);
+assert_eq!(alloc.largest_free_block(), 1000);
+"""
+
+[[task.tests.cases]]
+name = "allocation_failure"
+code = """
+let mut alloc = Allocator::new(100);
+let _ = alloc.alloc(60).unwrap();
+let _ = alloc.alloc(30).unwrap();
+assert_eq!(alloc.available(), 10);
+assert!(alloc.alloc(20).is_none());
+assert_eq!(alloc.alloc(0), None);
+"""
+
+[[task.tests.cases]]
+name = "first_fit_strategy"
+code = """
+let mut alloc = Allocator::new(1000);
+let a = alloc.alloc(200).unwrap(); // 0..200
+let b = alloc.alloc(200).unwrap(); // 200..400
+let c = alloc.alloc(200).unwrap(); // 400..600
+
+alloc.free(a); // free 0..200
+alloc.free(c); // free 400..600
+
+// First fit should use offset 0 (first free block)
+let d = alloc.alloc(100).unwrap();
+assert_eq!(d, 0);
+
+// Next alloc of 100 fits in remaining of first hole (offset 100)
+let e = alloc.alloc(100).unwrap();
+assert_eq!(e, 100);
+"""
+
+[[task.tests.cases]]
+name = "free_invalid_offset"
+code = """
+let mut alloc = Allocator::new(100);
+let a = alloc.alloc(50).unwrap();
+// Freeing an invalid offset should be a no-op
+alloc.free(999);
+assert_eq!(alloc.available(), 50);
+// Double free should be a no-op
+alloc.free(a);
+alloc.free(a);
+assert_eq!(alloc.available(), 100);
+"""

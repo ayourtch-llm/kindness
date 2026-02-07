@@ -1,0 +1,145 @@
+[task]
+id = "5_14_raft_log"
+tier = 5
+title = "Raft Consensus Log Replication"
+language = "rust"
+
+[task.description]
+text = """
+Implement a simplified Raft consensus log replication mechanism (single-node simulation, no networking).
+
+Define:
+```rust
+#[derive(Debug, Clone, PartialEq)]
+pub struct LogEntry {
+    pub term: u64,
+    pub index: u64,
+    pub data: Vec<u8>,
+}
+```
+
+Implement `struct RaftNode` with:
+- `fn new(id: u64) -> Self` — create a new node. Starts at term 0 with an empty log. The log is 1-indexed (first entry has index 1).
+- `fn current_term(&self) -> u64` — return the current term.
+- `fn set_term(&mut self, term: u64)` — set the current term (simulating leader election).
+- `fn append_entry(&mut self, data: Vec<u8>) -> u64` — append a new entry at the current term. Return the log index assigned (1-based, monotonically increasing).
+- `fn receive_append_entries(&mut self, leader_term: u64, prev_log_index: u64, prev_log_term: u64, entries: Vec<LogEntry>) -> bool` — simulate receiving an AppendEntries RPC:
+  - If `leader_term < self.current_term()`, reject (return false).
+  - If `prev_log_index > 0` and the node's log doesn't have an entry at `prev_log_index` with term `prev_log_term`, reject (return false).
+  - Otherwise, append the entries (overwriting any conflicting entries at the same index with different terms). Update current term to `leader_term` if it's higher. Return true.
+- `fn commit_up_to(&mut self, index: u64)` — set the commit index to `min(index, last_log_index)`.
+- `fn get_committed(&self) -> Vec<&LogEntry>` — return all committed log entries (index 1 through commit_index), in order.
+- `fn last_log_index(&self) -> u64` — return the index of the last log entry (0 if empty).
+- `fn last_log_term(&self) -> u64` — return the term of the last log entry (0 if empty).
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "append_and_commit"
+code = """
+let mut node = RaftNode::new(1);
+node.set_term(1);
+let idx1 = node.append_entry(b"hello".to_vec());
+let idx2 = node.append_entry(b"world".to_vec());
+assert_eq!(idx1, 1);
+assert_eq!(idx2, 2);
+assert_eq!(node.last_log_index(), 2);
+assert_eq!(node.last_log_term(), 1);
+
+node.commit_up_to(2);
+let committed = node.get_committed();
+assert_eq!(committed.len(), 2);
+assert_eq!(committed[0].data, b"hello");
+assert_eq!(committed[1].data, b"world");
+"""
+
+[[task.tests.cases]]
+name = "receive_entries_success"
+code = """
+let mut node = RaftNode::new(1);
+node.set_term(1);
+node.append_entry(b"first".to_vec());
+
+let entries = vec![
+    LogEntry { term: 1, index: 2, data: b"second".to_vec() },
+    LogEntry { term: 1, index: 3, data: b"third".to_vec() },
+];
+let ok = node.receive_append_entries(1, 1, 1, entries);
+assert!(ok);
+assert_eq!(node.last_log_index(), 3);
+"""
+
+[[task.tests.cases]]
+name = "reject_stale_term"
+code = """
+let mut node = RaftNode::new(1);
+node.set_term(5);
+let ok = node.receive_append_entries(3, 0, 0, vec![
+    LogEntry { term: 3, index: 1, data: b"old".to_vec() },
+]);
+assert!(!ok);
+"""
+
+[[task.tests.cases]]
+name = "reject_log_mismatch"
+code = """
+let mut node = RaftNode::new(1);
+node.set_term(1);
+node.append_entry(b"a".to_vec()); // index 1, term 1
+
+// Leader says prev_log_index=1, prev_log_term=2 — mismatch (node has term 1)
+let ok = node.receive_append_entries(2, 1, 2, vec![
+    LogEntry { term: 2, index: 2, data: b"b".to_vec() },
+]);
+assert!(!ok);
+"""
+
+[[task.tests.cases]]
+name = "overwrite_conflicting_entries"
+code = """
+let mut node = RaftNode::new(1);
+node.set_term(1);
+node.append_entry(b"a".to_vec()); // index 1, term 1
+node.append_entry(b"b".to_vec()); // index 2, term 1
+node.append_entry(b"c".to_vec()); // index 3, term 1
+
+// Leader at term 2 says: after index 1 (term 1), apply new entries
+let ok = node.receive_append_entries(2, 1, 1, vec![
+    LogEntry { term: 2, index: 2, data: b"x".to_vec() },
+    LogEntry { term: 2, index: 3, data: b"y".to_vec() },
+]);
+assert!(ok);
+assert_eq!(node.last_log_index(), 3);
+
+node.commit_up_to(3);
+let committed = node.get_committed();
+assert_eq!(committed[1].data, b"x");
+assert_eq!(committed[1].term, 2);
+assert_eq!(committed[2].data, b"y");
+"""
+
+[[task.tests.cases]]
+name = "commit_capped_at_log_length"
+code = """
+let mut node = RaftNode::new(1);
+node.set_term(1);
+node.append_entry(b"only".to_vec());
+node.commit_up_to(100);
+let committed = node.get_committed();
+assert_eq!(committed.len(), 1);
+"""
+
+[[task.tests.cases]]
+name = "empty_node"
+code = """
+let node = RaftNode::new(1);
+assert_eq!(node.last_log_index(), 0);
+assert_eq!(node.last_log_term(), 0);
+assert_eq!(node.current_term(), 0);
+assert!(node.get_committed().is_empty());
+"""

@@ -1,0 +1,167 @@
+[task]
+id = "5_01_http_router"
+tier = 5
+title = "Mini HTTP Router"
+language = "rust"
+
+[task.description]
+text = """
+Build a mini HTTP router with path parameters, method matching, and middleware support.
+
+Define the following structs:
+
+```rust
+#[derive(Debug, Clone)]
+pub struct Request {
+    pub method: String,
+    pub path: String,
+    pub params: HashMap<String, String>,
+    pub headers: HashMap<String, String>,
+    pub body: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Response {
+    pub status: u16,
+    pub body: String,
+}
+```
+
+Implement `struct Router` with:
+- `fn new() -> Self`
+- `fn add_middleware(&mut self, mw: Box<dyn Fn(&Request) -> Option<Response>>)` — if middleware returns Some(response), short-circuit and return it. Middlewares run in order before route handlers.
+- `fn add_route(&mut self, method: &str, path: &str, handler: Box<dyn Fn(&Request) -> Response>)` — register a handler. Path may contain parameters like `/users/:id/posts/:post_id`.
+- `fn route(&self, method: &str, path: &str) -> Response` — find matching route, extract path params into `Request.params`, call middlewares then handler. Return `Response { status: 404, body: "Not Found".into() }` if no match.
+
+Path matching rules:
+- `/users/:id` matches `/users/42` with params `{"id": "42"}`
+- Exact segments must match literally
+- Method must match case-insensitively
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "basic_route_matching"
+code = """
+use std::collections::HashMap;
+
+let mut router = Router::new();
+router.add_route("GET", "/hello", Box::new(|_req| Response {
+    status: 200,
+    body: "Hello, World!".into(),
+}));
+
+let resp = router.route("GET", "/hello");
+assert_eq!(resp.status, 200);
+assert_eq!(resp.body, "Hello, World!");
+"""
+
+[[task.tests.cases]]
+name = "path_params_extraction"
+code = """
+use std::collections::HashMap;
+
+let mut router = Router::new();
+router.add_route("GET", "/users/:id", Box::new(|req| Response {
+    status: 200,
+    body: format!("User {}", req.params.get("id").unwrap()),
+}));
+
+let resp = router.route("GET", "/users/42");
+assert_eq!(resp.status, 200);
+assert_eq!(resp.body, "User 42");
+"""
+
+[[task.tests.cases]]
+name = "multiple_path_params"
+code = """
+use std::collections::HashMap;
+
+let mut router = Router::new();
+router.add_route("GET", "/users/:uid/posts/:pid", Box::new(|req| Response {
+    status: 200,
+    body: format!("u={},p={}", req.params.get("uid").unwrap(), req.params.get("pid").unwrap()),
+}));
+
+let resp = router.route("GET", "/users/5/posts/99");
+assert_eq!(resp.status, 200);
+assert_eq!(resp.body, "u=5,p=99");
+"""
+
+[[task.tests.cases]]
+name = "method_not_matched"
+code = """
+use std::collections::HashMap;
+
+let mut router = Router::new();
+router.add_route("POST", "/data", Box::new(|_req| Response {
+    status: 201,
+    body: "Created".into(),
+}));
+
+let resp = router.route("GET", "/data");
+assert_eq!(resp.status, 404);
+assert_eq!(resp.body, "Not Found");
+"""
+
+[[task.tests.cases]]
+name = "not_found"
+code = """
+use std::collections::HashMap;
+
+let mut router = Router::new();
+let resp = router.route("GET", "/nonexistent");
+assert_eq!(resp.status, 404);
+assert_eq!(resp.body, "Not Found");
+"""
+
+[[task.tests.cases]]
+name = "middleware_short_circuit"
+code = """
+use std::collections::HashMap;
+
+let mut router = Router::new();
+router.add_middleware(Box::new(|req| {
+    if req.path == "/blocked" {
+        Some(Response { status: 403, body: "Forbidden".into() })
+    } else {
+        None
+    }
+}));
+router.add_route("GET", "/blocked", Box::new(|_req| Response {
+    status: 200,
+    body: "Should not reach".into(),
+}));
+router.add_route("GET", "/allowed", Box::new(|_req| Response {
+    status: 200,
+    body: "OK".into(),
+}));
+
+let resp = router.route("GET", "/blocked");
+assert_eq!(resp.status, 403);
+assert_eq!(resp.body, "Forbidden");
+
+let resp2 = router.route("GET", "/allowed");
+assert_eq!(resp2.status, 200);
+assert_eq!(resp2.body, "OK");
+"""
+
+[[task.tests.cases]]
+name = "case_insensitive_method"
+code = """
+use std::collections::HashMap;
+
+let mut router = Router::new();
+router.add_route("get", "/test", Box::new(|_req| Response {
+    status: 200,
+    body: "ok".into(),
+}));
+
+let resp = router.route("GET", "/test");
+assert_eq!(resp.status, 200);
+"""
