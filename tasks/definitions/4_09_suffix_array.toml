@@ -1,0 +1,95 @@
+[task]
+id = "4_09_suffix_array"
+tier = 4
+title = "Suffix Array and Pattern Matching"
+language = "rust"
+
+[task.description]
+text = """
+Build a suffix array for a given text and use it for efficient pattern matching.
+
+Functions:
+  fn build_suffix_array(text: &str) -> Vec<usize>
+      Build and return the suffix array: a sorted array of all suffix starting
+      indices. Suffixes are sorted lexicographically. The text is treated as
+      bytes/characters.
+
+  fn search_pattern(text: &str, sa: &[usize], pattern: &str) -> Vec<usize>
+      Using the suffix array, find all starting positions where pattern occurs in
+      text. Use binary search on the suffix array for O(m log n) search where m
+      is pattern length and n is text length. Return positions in sorted order.
+
+For build_suffix_array, you may use an O(n log^2 n) or O(n log n) construction.
+The naive O(n^2 log n) sort is acceptable for this task's constraints.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_suffix_array_simple"
+code = """
+let sa = build_suffix_array("banana");
+// Suffixes sorted: "a"(5), "ana"(3), "anana"(1), "banana"(0), "na"(4), "nana"(2)
+assert_eq!(sa, vec![5, 3, 1, 0, 4, 2]);
+"""
+
+[[task.tests.cases]]
+name = "test_search_single_char"
+code = """
+let text = "abracadabra";
+let sa = build_suffix_array(text);
+let mut positions = search_pattern(text, &sa, "a");
+positions.sort();
+assert_eq!(positions, vec![0, 3, 5, 7, 10]);
+"""
+
+[[task.tests.cases]]
+name = "test_search_substring"
+code = """
+let text = "mississippi";
+let sa = build_suffix_array(text);
+let mut positions = search_pattern(text, &sa, "issi");
+positions.sort();
+assert_eq!(positions, vec![1, 4]);
+"""
+
+[[task.tests.cases]]
+name = "test_search_not_found"
+code = """
+let text = "hello";
+let sa = build_suffix_array(text);
+let positions = search_pattern(text, &sa, "xyz");
+assert!(positions.is_empty());
+"""
+
+[[task.tests.cases]]
+name = "test_search_full_string"
+code = """
+let text = "abcdef";
+let sa = build_suffix_array(text);
+let positions = search_pattern(text, &sa, "abcdef");
+assert_eq!(positions, vec![0]);
+"""
+
+[[task.tests.cases]]
+name = "test_single_char_text"
+code = """
+let sa = build_suffix_array("a");
+assert_eq!(sa, vec![0]);
+let positions = search_pattern("a", &sa, "a");
+assert_eq!(positions, vec![0]);
+"""
+
+[[task.tests.cases]]
+name = "test_repeated_pattern"
+code = """
+let text = "aaaaaa";
+let sa = build_suffix_array(text);
+let mut positions = search_pattern(text, &sa, "aa");
+positions.sort();
+assert_eq!(positions, vec![0, 1, 2, 3, 4]);
+"""

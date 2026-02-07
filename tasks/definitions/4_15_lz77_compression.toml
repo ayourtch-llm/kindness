@@ -1,0 +1,125 @@
+[task]
+id = "4_15_lz77_compression"
+tier = 4
+title = "LZ77 Compression"
+language = "rust"
+
+[task.description]
+text = """
+Implement LZ77 compression and decompression.
+
+LZ77 replaces repeated occurrences of data with references to a single earlier
+copy. It uses a sliding window to find matches.
+
+Define:
+  #[derive(Debug, Clone, PartialEq)]
+  enum LzToken {
+      Literal(u8),
+      Match { offset: usize, length: usize },
+  }
+
+Functions:
+  fn compress(input: &[u8], window_size: usize) -> Vec<LzToken>
+      Compress the input bytes using LZ77 with the given sliding window size.
+      For each position, search backward in the window for the longest match
+      (minimum match length = 3). If a match of length >= 3 is found, emit
+      Match { offset, length } where offset is the distance back from the
+      current position. Otherwise, emit Literal(byte).
+
+  fn decompress(tokens: &[LzToken]) -> Vec<u8>
+      Decompress a sequence of LzTokens back to the original bytes. For each
+      Literal, append the byte. For each Match, copy `length` bytes from
+      `offset` positions back in the output buffer.
+
+The roundtrip decompress(compress(input, w)) must equal input for any valid
+window_size > 0.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_empty"
+code = """
+let compressed = compress(b"", 256);
+assert!(compressed.is_empty());
+let decompressed = decompress(&compressed);
+assert!(decompressed.is_empty());
+"""
+
+[[task.tests.cases]]
+name = "test_no_repeats"
+code = """
+let input = b"abcdef";
+let compressed = compress(input, 256);
+let decompressed = decompress(&compressed);
+assert_eq!(decompressed, input);
+"""
+
+[[task.tests.cases]]
+name = "test_all_same"
+code = """
+let input = b"aaaaaaaaaa"; // 10 a's
+let compressed = compress(input, 256);
+let decompressed = decompress(&compressed);
+assert_eq!(decompressed, input);
+// Should have some Match tokens since there are repeats
+let match_count = compressed.iter().filter(|t| matches!(t, LzToken::Match { .. })).count();
+assert!(match_count > 0, "Expected at least one match token for repeated data");
+"""
+
+[[task.tests.cases]]
+name = "test_repeated_pattern"
+code = """
+let input = b"abcabcabcabc";
+let compressed = compress(input, 256);
+let decompressed = decompress(&compressed);
+assert_eq!(decompressed, input);
+"""
+
+[[task.tests.cases]]
+name = "test_roundtrip_long"
+code = """
+let input: Vec<u8> = (0..200).map(|i| (i % 26 + 65) as u8).collect();
+let compressed = compress(&input, 128);
+let decompressed = decompress(&compressed);
+assert_eq!(decompressed, input);
+"""
+
+[[task.tests.cases]]
+name = "test_small_window"
+code = """
+let input = b"abcdefabcdef";
+let compressed = compress(input, 6);
+let decompressed = decompress(&compressed);
+assert_eq!(decompressed, input);
+"""
+
+[[task.tests.cases]]
+name = "test_decompress_manual"
+code = """
+// Manual tokens: "abc" as literals, then match back 3, length 3 => "abcabc"
+let tokens = vec![
+    LzToken::Literal(b'a'),
+    LzToken::Literal(b'b'),
+    LzToken::Literal(b'c'),
+    LzToken::Match { offset: 3, length: 3 },
+];
+let result = decompress(&tokens);
+assert_eq!(result, b"abcabc");
+"""
+
+[[task.tests.cases]]
+name = "test_overlapping_match"
+code = """
+// Overlapping copy: "a" then match offset=1, length=5 => "aaaaaa"
+let tokens = vec![
+    LzToken::Literal(b'a'),
+    LzToken::Match { offset: 1, length: 5 },
+];
+let result = decompress(&tokens);
+assert_eq!(result, b"aaaaaa");
+"""

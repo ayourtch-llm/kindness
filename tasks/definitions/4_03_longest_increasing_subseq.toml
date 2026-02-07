@@ -1,0 +1,71 @@
+[task]
+id = "4_03_longest_increasing_subseq"
+tier = 4
+title = "Longest Increasing Subsequence"
+language = "rust"
+
+[task.description]
+text = """
+Implement a function that finds the length of the longest strictly increasing
+subsequence in a slice of integers.
+
+Signature:
+  fn lis(nums: &[i32]) -> usize
+
+Use an O(n log n) algorithm based on patience sorting:
+maintain a list of "piles" where each pile's top is the smallest possible tail
+element for an increasing subsequence of that length. For each number, use binary
+search to find the leftmost pile whose top is >= the number and replace it (or
+start a new pile). The number of piles at the end is the LIS length.
+
+Return 0 for an empty input.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_empty"
+code = """
+assert_eq!(lis(&[]), 0);
+"""
+
+[[task.tests.cases]]
+name = "test_single"
+code = """
+assert_eq!(lis(&[5]), 1);
+"""
+
+[[task.tests.cases]]
+name = "test_sorted"
+code = """
+assert_eq!(lis(&[1, 2, 3, 4, 5]), 5);
+"""
+
+[[task.tests.cases]]
+name = "test_reverse_sorted"
+code = """
+assert_eq!(lis(&[5, 4, 3, 2, 1]), 1);
+"""
+
+[[task.tests.cases]]
+name = "test_classic"
+code = """
+assert_eq!(lis(&[10, 9, 2, 5, 3, 7, 101, 18]), 4); // 2,3,7,18 or 2,3,7,101
+"""
+
+[[task.tests.cases]]
+name = "test_duplicates"
+code = """
+// Strictly increasing, so duplicates don't extend
+assert_eq!(lis(&[3, 3, 3, 3]), 1);
+"""
+
+[[task.tests.cases]]
+name = "test_mixed"
+code = """
+assert_eq!(lis(&[0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15]), 6);
+"""

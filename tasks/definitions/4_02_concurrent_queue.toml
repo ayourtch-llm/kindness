@@ -1,0 +1,149 @@
+[task]
+id = "4_02_concurrent_queue"
+tier = 4
+title = "Thread-Safe Bounded Queue"
+language = "rust"
+
+[task.description]
+text = """
+Implement a thread-safe bounded queue using std::sync::Mutex and std::sync::Condvar.
+
+Struct: BoundedQueue<T>
+
+Methods:
+  - new(capacity: usize) -> Self
+      Create a new queue with the given maximum capacity.
+  - push(&self, val: T)
+      Push a value onto the queue. If the queue is at capacity, block until space
+      is available.
+  - pop(&self) -> T
+      Pop a value from the queue. If the queue is empty, block until a value is
+      available.
+  - len(&self) -> usize
+      Return the current number of items in the queue.
+
+The queue must be safe to use from multiple threads simultaneously (Send + Sync).
+Use Mutex for mutual exclusion and Condvar for signaling between producers and
+consumers.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = ["Mutex", "Condvar"]
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_basic_push_pop"
+code = """
+let q = BoundedQueue::new(10);
+q.push(1);
+q.push(2);
+assert_eq!(q.pop(), 1);
+assert_eq!(q.pop(), 2);
+"""
+
+[[task.tests.cases]]
+name = "test_len"
+code = """
+let q = BoundedQueue::new(5);
+assert_eq!(q.len(), 0);
+q.push(10);
+q.push(20);
+assert_eq!(q.len(), 2);
+q.pop();
+assert_eq!(q.len(), 1);
+"""
+
+[[task.tests.cases]]
+name = "test_fifo_order"
+code = """
+let q = BoundedQueue::new(10);
+for i in 0..5 {
+    q.push(i);
+}
+for i in 0..5 {
+    assert_eq!(q.pop(), i);
+}
+"""
+
+[[task.tests.cases]]
+name = "test_concurrent_producers_consumers"
+code = """
+use std::sync::Arc;
+use std::thread;
+
+let q = Arc::new(BoundedQueue::new(4));
+let mut producers = vec![];
+let mut consumers = vec![];
+
+for i in 0..8 {
+    let qc = Arc::clone(&q);
+    producers.push(thread::spawn(move || {
+        qc.push(i);
+    }));
+}
+
+for _ in 0..8 {
+    let qc = Arc::clone(&q);
+    consumers.push(thread::spawn(move || {
+        qc.pop()
+    }));
+}
+
+for h in producers {
+    h.join().unwrap();
+}
+
+let mut results: Vec<i32> = consumers.into_iter().map(|h| h.join().unwrap()).collect();
+results.sort();
+// All pushed values 0..8 must appear exactly once in popped results
+assert_eq!(results, vec![0, 1, 2, 3, 4, 5, 6, 7]);
+"""
+
+[[task.tests.cases]]
+name = "test_blocking_on_full"
+code = """
+use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
+
+let q = Arc::new(BoundedQueue::new(2));
+q.push(1);
+q.push(2);
+// Queue is now full
+
+let qc = Arc::clone(&q);
+let producer = thread::spawn(move || {
+    qc.push(3); // should block until space available
+});
+
+// Give producer time to block
+thread::sleep(Duration::from_millis(50));
+assert_eq!(q.len(), 2); // still full
+
+let val = q.pop(); // free one slot
+assert_eq!(val, 1);
+producer.join().unwrap();
+assert_eq!(q.len(), 2); // 2 and 3 now in queue
+"""
+
+[[task.tests.cases]]
+name = "test_blocking_on_empty"
+code = """
+use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
+
+let q: Arc<BoundedQueue<i32>> = Arc::new(BoundedQueue::new(5));
+
+let qc = Arc::clone(&q);
+let consumer = thread::spawn(move || {
+    qc.pop() // should block until item available
+});
+
+thread::sleep(Duration::from_millis(50));
+q.push(42);
+let val = consumer.join().unwrap();
+assert_eq!(val, 42);
+"""

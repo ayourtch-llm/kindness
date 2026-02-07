@@ -1,0 +1,100 @@
+[task]
+id = "4_06_bloom_filter"
+tier = 4
+title = "Bloom Filter"
+language = "rust"
+
+[task.description]
+text = """
+Implement a Bloom filter, a space-efficient probabilistic data structure for
+set membership testing. It may return false positives but never false negatives.
+
+Struct: BloomFilter
+
+Methods:
+  - new(size: usize, num_hashes: usize) -> Self
+      Create a bloom filter with a bit array of the given size and the specified
+      number of hash functions. Use independent hash functions derived by combining
+      two base hashes (e.g., h_i(x) = (h1(x) + i * h2(x)) % size).
+  - insert(&mut self, item: &str)
+      Insert an item into the filter by setting the appropriate bits.
+  - might_contain(&self, item: &str) -> bool
+      Check if an item might be in the set. Returns true if all corresponding bits
+      are set (possible member), false if any bit is unset (definitely not a member).
+
+You may use std::collections::hash_map::DefaultHasher or implement your own hash
+functions. The key invariant: if insert(x) was called, might_contain(x) MUST return
+true (no false negatives).
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_empty_filter"
+code = """
+let bf = BloomFilter::new(1000, 3);
+assert_eq!(bf.might_contain("hello"), false);
+"""
+
+[[task.tests.cases]]
+name = "test_insert_and_check"
+code = """
+let mut bf = BloomFilter::new(1000, 3);
+bf.insert("apple");
+bf.insert("banana");
+assert!(bf.might_contain("apple"));
+assert!(bf.might_contain("banana"));
+"""
+
+[[task.tests.cases]]
+name = "test_no_false_negatives"
+code = """
+let mut bf = BloomFilter::new(10000, 5);
+let items: Vec<String> = (0..100).map(|i| format!("item_{}", i)).collect();
+for item in &items {
+    bf.insert(item);
+}
+for item in &items {
+    assert!(bf.might_contain(item), "False negative for {}", item);
+}
+"""
+
+[[task.tests.cases]]
+name = "test_false_positive_rate"
+code = """
+let mut bf = BloomFilter::new(10000, 7);
+for i in 0..500 {
+    bf.insert(&format!("inserted_{}", i));
+}
+let mut false_positives = 0;
+for i in 0..1000 {
+    if bf.might_contain(&format!("not_inserted_{}", i)) {
+        false_positives += 1;
+    }
+}
+// With 10000 bits, 7 hashes, 500 items, FP rate should be well under 10%
+assert!(false_positives < 100, "Too many false positives: {}", false_positives);
+"""
+
+[[task.tests.cases]]
+name = "test_different_hash_counts"
+code = """
+let mut bf1 = BloomFilter::new(1000, 1);
+let mut bf2 = BloomFilter::new(1000, 10);
+bf1.insert("test");
+bf2.insert("test");
+assert!(bf1.might_contain("test"));
+assert!(bf2.might_contain("test"));
+"""
+
+[[task.tests.cases]]
+name = "test_empty_string"
+code = """
+let mut bf = BloomFilter::new(100, 3);
+bf.insert("");
+assert!(bf.might_contain(""));
+"""

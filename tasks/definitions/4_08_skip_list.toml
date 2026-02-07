@@ -1,0 +1,116 @@
+[task]
+id = "4_08_skip_list"
+tier = 4
+title = "Skip List"
+language = "rust"
+
+[task.description]
+text = """
+Implement a probabilistic skip list that functions as an ordered set of integers.
+A skip list is a layered linked list where higher layers act as express lanes for
+faster searching, achieving O(log n) expected time for search, insert, and delete.
+
+Struct: SkipList
+
+Methods:
+  - new() -> Self
+      Create an empty skip list. Use a max level of 16 and promotion probability
+      of 0.5.
+  - insert(&mut self, val: i32) -> bool
+      Insert a value. Return true if inserted, false if already present (no
+      duplicates).
+  - contains(&self, val: i32) -> bool
+      Return true if the value exists in the skip list.
+  - remove(&mut self, val: i32) -> bool
+      Remove a value. Return true if removed, false if not found.
+  - len(&self) -> usize
+      Return the number of elements in the skip list.
+
+You may use rand crate or std random facilities for level generation.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_empty"
+code = """
+let sl = SkipList::new();
+assert_eq!(sl.len(), 0);
+assert!(!sl.contains(1));
+"""
+
+[[task.tests.cases]]
+name = "test_insert_and_contains"
+code = """
+let mut sl = SkipList::new();
+assert!(sl.insert(5));
+assert!(sl.insert(3));
+assert!(sl.insert(7));
+assert!(sl.contains(5));
+assert!(sl.contains(3));
+assert!(sl.contains(7));
+assert!(!sl.contains(4));
+assert_eq!(sl.len(), 3);
+"""
+
+[[task.tests.cases]]
+name = "test_no_duplicates"
+code = """
+let mut sl = SkipList::new();
+assert!(sl.insert(10));
+assert!(!sl.insert(10)); // duplicate
+assert_eq!(sl.len(), 1);
+"""
+
+[[task.tests.cases]]
+name = "test_remove"
+code = """
+let mut sl = SkipList::new();
+sl.insert(1);
+sl.insert(2);
+sl.insert(3);
+assert!(sl.remove(2));
+assert!(!sl.contains(2));
+assert_eq!(sl.len(), 2);
+assert!(!sl.remove(2)); // already removed
+"""
+
+[[task.tests.cases]]
+name = "test_many_elements"
+code = """
+let mut sl = SkipList::new();
+for i in 0..100 {
+    assert!(sl.insert(i));
+}
+assert_eq!(sl.len(), 100);
+for i in 0..100 {
+    assert!(sl.contains(i));
+}
+for i in 0..50 {
+    assert!(sl.remove(i));
+}
+assert_eq!(sl.len(), 50);
+for i in 0..50 {
+    assert!(!sl.contains(i));
+}
+for i in 50..100 {
+    assert!(sl.contains(i));
+}
+"""
+
+[[task.tests.cases]]
+name = "test_negative_values"
+code = """
+let mut sl = SkipList::new();
+sl.insert(-5);
+sl.insert(0);
+sl.insert(5);
+assert!(sl.contains(-5));
+assert!(sl.contains(0));
+assert!(sl.contains(5));
+assert_eq!(sl.len(), 3);
+"""

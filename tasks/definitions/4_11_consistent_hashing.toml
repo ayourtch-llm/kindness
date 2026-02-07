@@ -1,0 +1,135 @@
+[task]
+id = "4_11_consistent_hashing"
+tier = 4
+title = "Consistent Hashing Ring"
+language = "rust"
+
+[task.description]
+text = """
+Implement a consistent hashing ring with virtual nodes for distributed key
+assignment.
+
+Struct: HashRing
+
+Methods:
+  - new(replicas: usize) -> Self
+      Create a new hash ring. Each physical node will have `replicas` virtual
+      nodes placed on the ring.
+  - add_node(&mut self, node: &str)
+      Add a node to the ring, placing `replicas` virtual nodes at hashed
+      positions around the ring.
+  - remove_node(&mut self, node: &str)
+      Remove a node and all its virtual nodes from the ring.
+  - get_node(&self, key: &str) -> Option<&str>
+      Given a key, return the node responsible for it. Hash the key, then walk
+      clockwise around the ring to find the first virtual node. Return the
+      physical node name. Return None if the ring is empty.
+
+Use a sorted data structure (e.g., BTreeMap) to store virtual node positions.
+Hash function should produce consistent results (e.g., use DefaultHasher or a
+simple hash).
+
+The key property: adding or removing a node should only remap keys near that
+node on the ring, not all keys.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = ["BTreeMap"]
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_empty_ring"
+code = """
+let ring = HashRing::new(3);
+assert_eq!(ring.get_node("any_key"), None);
+"""
+
+[[task.tests.cases]]
+name = "test_single_node"
+code = """
+let mut ring = HashRing::new(3);
+ring.add_node("server1");
+assert_eq!(ring.get_node("key1"), Some("server1"));
+assert_eq!(ring.get_node("key2"), Some("server1"));
+"""
+
+[[task.tests.cases]]
+name = "test_multiple_nodes"
+code = """
+let mut ring = HashRing::new(100);
+ring.add_node("server1");
+ring.add_node("server2");
+ring.add_node("server3");
+// All keys should map to some node
+for i in 0..20 {
+    let key = format!("key_{}", i);
+    assert!(ring.get_node(&key).is_some());
+}
+"""
+
+[[task.tests.cases]]
+name = "test_remove_node"
+code = """
+let mut ring = HashRing::new(50);
+ring.add_node("A");
+ring.add_node("B");
+ring.add_node("C");
+ring.remove_node("B");
+// All keys should still resolve to A or C
+for i in 0..30 {
+    let key = format!("test_{}", i);
+    let node = ring.get_node(&key).unwrap();
+    assert!(node == "A" || node == "C", "Unexpected node: {}", node);
+}
+"""
+
+[[task.tests.cases]]
+name = "test_consistency"
+code = """
+let mut ring = HashRing::new(50);
+ring.add_node("node1");
+ring.add_node("node2");
+// Same key always maps to same node
+let n1 = ring.get_node("stable_key").unwrap().to_string();
+let n2 = ring.get_node("stable_key").unwrap().to_string();
+assert_eq!(n1, n2);
+"""
+
+[[task.tests.cases]]
+name = "test_distribution"
+code = """
+let mut ring = HashRing::new(150);
+ring.add_node("A");
+ring.add_node("B");
+ring.add_node("C");
+let mut counts = std::collections::HashMap::new();
+for i in 0..3000 {
+    let key = format!("key_{}", i);
+    let node = ring.get_node(&key).unwrap();
+    *counts.entry(node.to_string()).or_insert(0) += 1;
+}
+// Each node should get at least some keys (rough balance check)
+assert!(counts.get("A").unwrap_or(&0) > &100);
+assert!(counts.get("B").unwrap_or(&0) > &100);
+assert!(counts.get("C").unwrap_or(&0) > &100);
+"""
+
+[[task.tests.cases]]
+name = "test_minimal_disruption"
+code = """
+let mut ring = HashRing::new(150);
+ring.add_node("A");
+ring.add_node("B");
+
+let keys: Vec<String> = (0..200).map(|i| format!("k{}", i)).collect();
+let before: Vec<String> = keys.iter().map(|k| ring.get_node(k).unwrap().to_string()).collect();
+
+ring.add_node("C");
+let after: Vec<String> = keys.iter().map(|k| ring.get_node(k).unwrap().to_string()).collect();
+
+let unchanged = before.iter().zip(after.iter()).filter(|(a, b)| a == b).count();
+// Most keys should remain on the same node after adding one of three
+assert!(unchanged > 80, "Too many keys remapped: only {} unchanged out of 200", unchanged);
+"""

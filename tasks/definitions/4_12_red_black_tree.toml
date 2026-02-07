@@ -1,0 +1,113 @@
+[task]
+id = "4_12_red_black_tree"
+tier = 4
+title = "Red-Black Tree"
+language = "rust"
+
+[task.description]
+text = """
+Implement a red-black tree, a self-balancing binary search tree.
+
+Struct: RBTree<T: Ord>
+
+Methods:
+  - new() -> Self
+      Create an empty red-black tree.
+  - insert(&mut self, val: T)
+      Insert a value into the tree, maintaining red-black invariants:
+      1. Every node is red or black.
+      2. The root is black.
+      3. No two consecutive red nodes (red node's children are black).
+      4. Every path from root to a null leaf has the same number of black nodes.
+      Duplicates may be ignored (no-op on duplicate insert).
+  - contains(&self, val: &T) -> bool
+      Return true if the value exists in the tree.
+  - to_sorted_vec(&self) -> Vec<&T>
+      Return an in-order traversal of the tree as a vector of references.
+  - len(&self) -> usize
+      Return the number of elements in the tree.
+
+Implement the standard insert fixup with rotations and recoloring.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = ["BTreeSet", "BTreeMap"]
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_empty"
+code = """
+let tree: RBTree<i32> = RBTree::new();
+assert_eq!(tree.len(), 0);
+assert!(!tree.contains(&5));
+assert!(tree.to_sorted_vec().is_empty());
+"""
+
+[[task.tests.cases]]
+name = "test_insert_and_contains"
+code = """
+let mut tree = RBTree::new();
+tree.insert(10);
+tree.insert(5);
+tree.insert(15);
+assert!(tree.contains(&10));
+assert!(tree.contains(&5));
+assert!(tree.contains(&15));
+assert!(!tree.contains(&7));
+assert_eq!(tree.len(), 3);
+"""
+
+[[task.tests.cases]]
+name = "test_sorted_order"
+code = """
+let mut tree = RBTree::new();
+for &val in &[50, 25, 75, 10, 30, 60, 80] {
+    tree.insert(val);
+}
+let sorted = tree.to_sorted_vec();
+assert_eq!(sorted, vec![&10, &25, &30, &50, &60, &75, &80]);
+"""
+
+[[task.tests.cases]]
+name = "test_sequential_insert"
+code = """
+let mut tree = RBTree::new();
+// Inserting in order would make a degenerate BST, but RB-tree should balance
+for i in 1..=20 {
+    tree.insert(i);
+}
+assert_eq!(tree.len(), 20);
+let sorted = tree.to_sorted_vec();
+let expected: Vec<i32> = (1..=20).collect();
+let sorted_vals: Vec<i32> = sorted.iter().map(|&&x| x).collect();
+assert_eq!(sorted_vals, expected);
+"""
+
+[[task.tests.cases]]
+name = "test_duplicates"
+code = """
+let mut tree = RBTree::new();
+tree.insert(5);
+tree.insert(5);
+tree.insert(5);
+assert_eq!(tree.len(), 1);
+assert!(tree.contains(&5));
+"""
+
+[[task.tests.cases]]
+name = "test_large_random"
+code = """
+let mut tree = RBTree::new();
+let values = vec![42, 17, 88, 3, 55, 71, 9, 33, 96, 1, 64, 27, 81, 14, 49];
+for &v in &values {
+    tree.insert(v);
+}
+assert_eq!(tree.len(), 15);
+let sorted = tree.to_sorted_vec();
+let mut expected = values.clone();
+expected.sort();
+let sorted_vals: Vec<i32> = sorted.iter().map(|&&x| x).collect();
+assert_eq!(sorted_vals, expected);
+"""

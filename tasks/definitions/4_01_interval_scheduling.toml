@@ -1,0 +1,72 @@
+[task]
+id = "4_01_interval_scheduling"
+tier = 4
+title = "Maximum Non-Overlapping Intervals"
+language = "rust"
+
+[task.description]
+text = """
+Implement a function that finds the maximum number of non-overlapping intervals
+from a given list of intervals. Each interval is represented as a tuple (start, end)
+where start < end.
+
+Two intervals overlap if one starts before the other ends. Use a greedy algorithm:
+sort by end time, then greedily select intervals that don't conflict with the last
+selected interval.
+
+Signature:
+  fn max_non_overlapping(intervals: &[(i32, i32)]) -> usize
+
+Return the maximum count of non-overlapping intervals that can be selected.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_empty"
+code = """
+assert_eq!(max_non_overlapping(&[]), 0);
+"""
+
+[[task.tests.cases]]
+name = "test_single"
+code = """
+assert_eq!(max_non_overlapping(&[(1, 5)]), 1);
+"""
+
+[[task.tests.cases]]
+name = "test_no_overlap"
+code = """
+assert_eq!(max_non_overlapping(&[(1, 2), (3, 4), (5, 6)]), 3);
+"""
+
+[[task.tests.cases]]
+name = "test_all_overlap"
+code = """
+assert_eq!(max_non_overlapping(&[(1, 10), (2, 9), (3, 8)]), 1);
+"""
+
+[[task.tests.cases]]
+name = "test_classic_greedy"
+code = """
+// (1,4) overlaps (2,5); pick (1,4) then (5,7) then (8,10)
+assert_eq!(max_non_overlapping(&[(1, 4), (2, 5), (5, 7), (6, 9), (8, 10)]), 3);
+"""
+
+[[task.tests.cases]]
+name = "test_touching_boundaries"
+code = """
+// Intervals that share an endpoint: (1,3) and (3,5) do NOT overlap
+assert_eq!(max_non_overlapping(&[(1, 3), (3, 5), (5, 7)]), 3);
+"""
+
+[[task.tests.cases]]
+name = "test_nested_intervals"
+code = """
+// (1,10) contains (2,3),(4,5),(6,7); skip outer, pick inner three
+assert_eq!(max_non_overlapping(&[(1, 10), (2, 3), (4, 5), (6, 7)]), 3);
+"""
