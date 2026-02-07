@@ -1,0 +1,119 @@
+[task]
+id = "3_15_text_justification"
+tier = 3
+title = "Full Text Justification"
+language = "rust"
+
+[task.description]
+text = """
+Implement full text justification. Given a list of words and a maximum line width,
+format the text such that each line has exactly `max_width` characters and is
+fully (left and right) justified.
+
+Implement the function:
+
+`fn justify(words: &[&str], max_width: usize) -> Vec<String>`
+
+Rules:
+1. Pack as many words as you can in each line. A line's word count is determined
+   greedily: add words to the current line as long as adding the next word (plus
+   one space separator) does not exceed `max_width`.
+2. Extra spaces between words should be distributed as evenly as possible. If the
+   number of spaces does not divide evenly, the leftmost gaps get one extra space
+   each. For example, if a line has 3 gaps and 7 extra spaces, the gaps get
+   3, 2, 2 spaces respectively.
+3. The last line of text should be left-justified with no extra spacing between
+   words. Pad the end of the last line with spaces to reach `max_width`.
+4. A line containing only one word should be left-justified and padded with
+   trailing spaces.
+
+You may assume all words have length ≤ `max_width` and that the input is
+non-empty.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_basic_justification"
+code = """
+let words = vec!["This", "is", "an", "example", "of", "text", "justification."];
+let result = justify(&words, 16);
+assert_eq!(result, vec![
+    "This    is    an",
+    "example  of text",
+    "justification.  ",
+]);
+"""
+
+[[task.tests.cases]]
+name = "test_single_word_per_line"
+code = """
+let words = vec!["hello", "world"];
+let result = justify(&words, 5);
+assert_eq!(result, vec![
+    "hello",
+    "world",
+]);
+"""
+
+[[task.tests.cases]]
+name = "test_last_line_left_justified"
+code = """
+let words = vec!["What", "must", "be", "acknowledgment", "shall", "be"];
+let result = justify(&words, 16);
+assert_eq!(result, vec![
+    "What   must   be",
+    "acknowledgment  ",
+    "shall be        ",
+]);
+"""
+
+[[task.tests.cases]]
+name = "test_long_sentence"
+code = """
+let words = vec![
+    "Science", "is", "what", "we", "understand", "well", "enough",
+    "to", "explain", "to", "a", "computer.", "Art", "is", "everything",
+    "else", "we", "do",
+];
+let result = justify(&words, 20);
+assert_eq!(result, vec![
+    "Science  is  what we",
+    "understand      well",
+    "enough to explain to",
+    "a  computer.  Art is",
+    "everything  else  we",
+    "do                  ",
+]);
+"""
+
+[[task.tests.cases]]
+name = "test_single_word_input"
+code = """
+let words = vec!["alone"];
+let result = justify(&words, 10);
+assert_eq!(result, vec!["alone     "]);
+"""
+
+[[task.tests.cases]]
+name = "test_exact_fit_no_extra_spaces"
+code = """
+let words = vec!["a", "b", "c"];
+let result = justify(&words, 5);
+assert_eq!(result, vec!["a b c"]);
+"""
+
+[[task.tests.cases]]
+name = "test_uneven_space_distribution"
+code = """
+let words = vec!["aa", "bb", "cc", "dd"];
+let result = justify(&words, 8);
+assert_eq!(result, vec![
+    "aa bb cc",
+    "dd      ",
+]);
+"""

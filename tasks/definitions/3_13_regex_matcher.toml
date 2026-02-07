@@ -1,0 +1,101 @@
+[task]
+id = "3_13_regex_matcher"
+tier = 3
+title = "Simple Regex Matcher"
+language = "rust"
+
+[task.description]
+text = """
+Implement a simple regular expression matcher that supports two special characters:
+
+- `.` (dot) — Matches any single character.
+- `*` (star) — Matches zero or more of the preceding element.
+
+Implement the function:
+
+`fn is_match(text: &str, pattern: &str) -> bool`
+
+The matching should cover the entire input string, not partial matches. That is,
+the pattern must account for every character in `text` from start to finish.
+
+Rules:
+- `*` always follows a valid character or `.` (the pattern is well-formed).
+- `.*` matches any sequence of characters (including the empty string).
+- `a*` matches zero or more `a` characters.
+- `.` matches exactly one of any character.
+- Regular characters match only themselves.
+
+Examples:
+- `is_match("aa", "a")` → false
+- `is_match("aa", "a*")` → true
+- `is_match("ab", ".*")` → true
+- `is_match("aab", "c*a*b")` → true (c* matches zero c's, a* matches two a's)
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = ["regex"]
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_exact_match"
+code = """
+assert!(is_match("abc", "abc"));
+assert!(!is_match("abc", "abd"));
+"""
+
+[[task.tests.cases]]
+name = "test_dot_wildcard"
+code = """
+assert!(is_match("abc", "a.c"));
+assert!(is_match("axc", "a.c"));
+assert!(!is_match("ac", "a.c"));
+assert!(is_match("abc", "..."));
+"""
+
+[[task.tests.cases]]
+name = "test_star_repetition"
+code = """
+assert!(is_match("aa", "a*"));
+assert!(is_match("aaa", "a*"));
+assert!(is_match("", "a*"));
+assert!(is_match("b", "a*b"));
+assert!(is_match("aab", "a*b"));
+"""
+
+[[task.tests.cases]]
+name = "test_dot_star"
+code = """
+assert!(is_match("anything goes here", ".*"));
+assert!(is_match("", ".*"));
+assert!(is_match("abc", ".*c"));
+assert!(is_match("abc", "a.*"));
+"""
+
+[[task.tests.cases]]
+name = "test_complex_patterns"
+code = """
+assert!(is_match("aab", "c*a*b"));
+assert!(!is_match("mississippi", "mis*is*p*."));
+assert!(is_match("mississippi", "mis*is*s*ip*pi"));
+assert!(is_match("ab", ".*.."));
+assert!(!is_match("ab", ".*..."));
+"""
+
+[[task.tests.cases]]
+name = "test_empty_text_and_pattern"
+code = """
+assert!(is_match("", ""));
+assert!(!is_match("a", ""));
+assert!(is_match("", "a*b*c*"));
+"""
+
+[[task.tests.cases]]
+name = "test_trailing_star"
+code = """
+assert!(is_match("a", "ab*"));
+assert!(is_match("abc", "abc*"));
+assert!(is_match("abccc", "abc*"));
+assert!(!is_match("abcd", "abc*"));
+"""

@@ -1,0 +1,131 @@
+[task]
+id = "3_14_priority_queue"
+tier = 3
+title = "Binary Min-Heap Priority Queue"
+language = "rust"
+
+[task.description]
+text = """
+Implement a binary min-heap priority queue from scratch.
+
+Define a struct `MinHeap<T: Ord>` with the following methods:
+
+- `new() -> Self` — Create a new empty heap.
+- `push(&mut self, val: T)` — Insert a value into the heap, maintaining the
+  min-heap property.
+- `pop(&mut self) -> Option<T>` — Remove and return the smallest element from
+  the heap, or `None` if empty. Restore the heap property after removal.
+- `peek(&self) -> Option<&T>` — Return a reference to the smallest element
+  without removing it, or `None` if empty.
+- `len(&self) -> usize` — Return the number of elements in the heap.
+- `is_empty(&self) -> bool` — Return true if the heap contains no elements.
+
+The heap must be backed by a `Vec<T>`. Use the standard array-based binary heap
+layout where for a node at index `i`, the left child is at `2*i + 1` and the
+right child is at `2*i + 2`, and the parent is at `(i - 1) / 2`.
+
+You must implement the sift-up (after push) and sift-down (after pop) operations
+yourself.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = ["Vec"]
+forbidden = ["BinaryHeap"]
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_push_and_peek"
+code = """
+let mut heap = MinHeap::new();
+heap.push(5);
+heap.push(3);
+heap.push(8);
+assert_eq!(heap.peek(), Some(&3));
+assert_eq!(heap.len(), 3);
+"""
+
+[[task.tests.cases]]
+name = "test_pop_ordering"
+code = """
+let mut heap = MinHeap::new();
+heap.push(10);
+heap.push(4);
+heap.push(15);
+heap.push(1);
+heap.push(7);
+assert_eq!(heap.pop(), Some(1));
+assert_eq!(heap.pop(), Some(4));
+assert_eq!(heap.pop(), Some(7));
+assert_eq!(heap.pop(), Some(10));
+assert_eq!(heap.pop(), Some(15));
+assert_eq!(heap.pop(), None);
+"""
+
+[[task.tests.cases]]
+name = "test_empty_heap"
+code = """
+let mut heap: MinHeap<i32> = MinHeap::new();
+assert!(heap.is_empty());
+assert_eq!(heap.len(), 0);
+assert_eq!(heap.peek(), None);
+assert_eq!(heap.pop(), None);
+"""
+
+[[task.tests.cases]]
+name = "test_single_element"
+code = """
+let mut heap = MinHeap::new();
+heap.push(42);
+assert_eq!(heap.peek(), Some(&42));
+assert_eq!(heap.len(), 1);
+assert!(!heap.is_empty());
+assert_eq!(heap.pop(), Some(42));
+assert!(heap.is_empty());
+"""
+
+[[task.tests.cases]]
+name = "test_duplicates"
+code = """
+let mut heap = MinHeap::new();
+heap.push(5);
+heap.push(5);
+heap.push(3);
+heap.push(3);
+heap.push(1);
+assert_eq!(heap.pop(), Some(1));
+assert_eq!(heap.pop(), Some(3));
+assert_eq!(heap.pop(), Some(3));
+assert_eq!(heap.pop(), Some(5));
+assert_eq!(heap.pop(), Some(5));
+"""
+
+[[task.tests.cases]]
+name = "test_interleaved_push_pop"
+code = """
+let mut heap = MinHeap::new();
+heap.push(10);
+heap.push(20);
+assert_eq!(heap.pop(), Some(10));
+heap.push(5);
+assert_eq!(heap.peek(), Some(&5));
+heap.push(15);
+assert_eq!(heap.pop(), Some(5));
+assert_eq!(heap.pop(), Some(15));
+assert_eq!(heap.pop(), Some(20));
+assert!(heap.is_empty());
+"""
+
+[[task.tests.cases]]
+name = "test_large_sequence"
+code = """
+let mut heap = MinHeap::new();
+for i in (0..100).rev() {
+    heap.push(i);
+}
+assert_eq!(heap.len(), 100);
+for i in 0..100 {
+    assert_eq!(heap.pop(), Some(i));
+}
+assert!(heap.is_empty());
+"""

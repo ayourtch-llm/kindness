@@ -1,0 +1,122 @@
+[task]
+id = "3_12_sparse_matrix"
+tier = 3
+title = "Sparse Matrix with COO Format"
+language = "rust"
+
+[task.description]
+text = """
+Implement a sparse matrix using the coordinate list (COO) format. In this format,
+only non-zero entries are stored as (row, col, value) triples.
+
+Define a struct `SparseMatrix` with the following methods:
+
+- `new(rows: usize, cols: usize) -> Self` — Create a new zero matrix with the
+  given dimensions.
+- `set(&mut self, row: usize, col: usize, val: f64)` — Set the value at the
+  given position. If `val` is 0.0, remove the entry if it exists. Panic if the
+  indices are out of bounds.
+- `get(&self, row: usize, col: usize) -> f64` — Return the value at the given
+  position. Return 0.0 for entries that are not stored. Panic if the indices are
+  out of bounds.
+- `transpose(&self) -> SparseMatrix` — Return a new sparse matrix that is the
+  transpose of this one.
+- `multiply(&self, other: &SparseMatrix) -> SparseMatrix` — Return the matrix
+  product of `self * other`. Panic if the dimensions are incompatible (i.e.
+  `self.cols != other.rows`).
+
+All operations should work correctly with floating-point values. Use an epsilon
+of 1e-9 when comparing floats to zero in `set`.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_new_and_get_zero"
+code = """
+let m = SparseMatrix::new(3, 3);
+assert!((m.get(0, 0) - 0.0).abs() < 1e-9);
+assert!((m.get(2, 2) - 0.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_set_and_get"
+code = """
+let mut m = SparseMatrix::new(3, 4);
+m.set(0, 1, 5.0);
+m.set(2, 3, -3.5);
+assert!((m.get(0, 1) - 5.0).abs() < 1e-9);
+assert!((m.get(2, 3) - (-3.5)).abs() < 1e-9);
+assert!((m.get(0, 0) - 0.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_set_zero_removes_entry"
+code = """
+let mut m = SparseMatrix::new(2, 2);
+m.set(0, 0, 42.0);
+assert!((m.get(0, 0) - 42.0).abs() < 1e-9);
+m.set(0, 0, 0.0);
+assert!((m.get(0, 0) - 0.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_transpose"
+code = """
+let mut m = SparseMatrix::new(2, 3);
+m.set(0, 1, 7.0);
+m.set(1, 2, 4.0);
+let t = m.transpose();
+assert!((t.get(1, 0) - 7.0).abs() < 1e-9);
+assert!((t.get(2, 1) - 4.0).abs() < 1e-9);
+assert!((t.get(0, 0) - 0.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_multiply_identity"
+code = """
+let mut a = SparseMatrix::new(2, 2);
+a.set(0, 0, 3.0);
+a.set(0, 1, 4.0);
+a.set(1, 0, 1.0);
+a.set(1, 1, 2.0);
+let mut identity = SparseMatrix::new(2, 2);
+identity.set(0, 0, 1.0);
+identity.set(1, 1, 1.0);
+let result = a.multiply(&identity);
+assert!((result.get(0, 0) - 3.0).abs() < 1e-9);
+assert!((result.get(0, 1) - 4.0).abs() < 1e-9);
+assert!((result.get(1, 0) - 1.0).abs() < 1e-9);
+assert!((result.get(1, 1) - 2.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_multiply_rectangular"
+code = """
+let mut a = SparseMatrix::new(2, 3);
+a.set(0, 0, 1.0);
+a.set(0, 2, 2.0);
+a.set(1, 1, 3.0);
+let mut b = SparseMatrix::new(3, 2);
+b.set(0, 0, 4.0);
+b.set(1, 1, 5.0);
+b.set(2, 0, 6.0);
+let c = a.multiply(&b);
+assert!((c.get(0, 0) - 16.0).abs() < 1e-9);
+assert!((c.get(0, 1) - 0.0).abs() < 1e-9);
+assert!((c.get(1, 0) - 0.0).abs() < 1e-9);
+assert!((c.get(1, 1) - 15.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_overwrite_value"
+code = """
+let mut m = SparseMatrix::new(2, 2);
+m.set(0, 0, 1.0);
+m.set(0, 0, 99.0);
+assert!((m.get(0, 0) - 99.0).abs() < 1e-9);
+"""
