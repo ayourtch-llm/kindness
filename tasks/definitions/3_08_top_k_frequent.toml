@@ -1,0 +1,65 @@
+[task]
+id = "3_08_top_k_frequent"
+tier = 3
+title = "Top K Frequent Elements"
+language = "rust"
+
+[task.description]
+text = """
+Given an integer slice and a number k, return the k most frequent elements.
+
+Implement the function:
+
+`fn top_k_frequent(nums: &[i32], k: usize) -> Vec<i32>`
+
+The returned vector must contain exactly k elements, sorted in descending order
+of frequency. If two elements have the same frequency, their relative order in
+the result does not matter.
+
+You may use a HashMap to count frequencies and any sorting or heap-based approach
+to find the top k elements.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = ["HashMap"]
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_basic"
+code = """
+let result = top_k_frequent(&[1, 1, 1, 2, 2, 3], 2);
+assert_eq!(result.len(), 2);
+assert!(result.contains(&1));
+assert!(result.contains(&2));
+"""
+
+[[task.tests.cases]]
+name = "test_single_element"
+code = """
+let result = top_k_frequent(&[1], 1);
+assert_eq!(result, vec![1]);
+"""
+
+[[task.tests.cases]]
+name = "test_all_same_frequency"
+code = """
+let result = top_k_frequent(&[1, 2, 3, 4], 2);
+assert_eq!(result.len(), 2);
+"""
+
+[[task.tests.cases]]
+name = "test_k_equals_unique_count"
+code = """
+let mut result = top_k_frequent(&[3, 3, 1, 1, 2, 2], 3);
+result.sort();
+assert_eq!(result, vec![1, 2, 3]);
+"""
+
+[[task.tests.cases]]
+name = "test_negative_numbers"
+code = """
+let result = top_k_frequent(&[-1, -1, -1, 2, 2, 3, 3, 3, 3], 1);
+assert_eq!(result, vec![3]);
+"""

@@ -1,0 +1,71 @@
+[task]
+id = "3_05_calculator"
+tier = 3
+title = "Basic Calculator"
+language = "rust"
+
+[task.description]
+text = """
+Implement a basic calculator that evaluates arithmetic expressions given as
+strings. The calculator must support:
+
+- Addition (+), subtraction (-), multiplication (*), division (/)
+- Parentheses for grouping
+- Floating-point numbers (including negative numbers from unary minus)
+- Standard operator precedence (* and / before + and -)
+
+Implement the function:
+
+`fn calculate(expr: &str) -> f64`
+
+The input expression will be a valid arithmetic expression. Division by zero
+does not need to be handled. Whitespace in the expression should be ignored.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_simple_addition"
+code = """
+let result = calculate("2 + 3");
+assert!((result - 5.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_operator_precedence"
+code = """
+let result = calculate("2 + 3 * 4");
+assert!((result - 14.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_parentheses"
+code = """
+let result = calculate("(2 + 3) * 4");
+assert!((result - 20.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_nested_parentheses"
+code = """
+let result = calculate("((2 + 3) * (4 - 1)) / 5");
+assert!((result - 3.0).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_division"
+code = """
+let result = calculate("10 / 4");
+assert!((result - 2.5).abs() < 1e-9);
+"""
+
+[[task.tests.cases]]
+name = "test_complex_expression"
+code = """
+let result = calculate("3 + 4 * 2 / (1 - 5) * 2 + 3");
+assert!((result - 2.0).abs() < 1e-9);
+"""

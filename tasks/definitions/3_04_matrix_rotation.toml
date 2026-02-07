@@ -1,0 +1,107 @@
+[task]
+id = "3_04_matrix_rotation"
+tier = 3
+title = "Rotate Matrix 90 Degrees Clockwise"
+language = "rust"
+
+[task.description]
+text = """
+Rotate an NxN matrix 90 degrees clockwise in-place.
+
+Implement the function:
+
+`fn rotate(matrix: &mut Vec<Vec<i32>>)`
+
+The rotation must be performed in-place (do not allocate a new matrix).
+
+For example, given:
+```
+1 2 3
+4 5 6
+7 8 9
+```
+After rotation:
+```
+7 4 1
+8 5 2
+9 6 3
+```
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_3x3"
+code = """
+let mut matrix = vec![
+    vec![1, 2, 3],
+    vec![4, 5, 6],
+    vec![7, 8, 9],
+];
+rotate(&mut matrix);
+assert_eq!(matrix, vec![
+    vec![7, 4, 1],
+    vec![8, 5, 2],
+    vec![9, 6, 3],
+]);
+"""
+
+[[task.tests.cases]]
+name = "test_4x4"
+code = """
+let mut matrix = vec![
+    vec![1,  2,  3,  4],
+    vec![5,  6,  7,  8],
+    vec![9,  10, 11, 12],
+    vec![13, 14, 15, 16],
+];
+rotate(&mut matrix);
+assert_eq!(matrix, vec![
+    vec![13, 9,  5, 1],
+    vec![14, 10, 6, 2],
+    vec![15, 11, 7, 3],
+    vec![16, 12, 8, 4],
+]);
+"""
+
+[[task.tests.cases]]
+name = "test_1x1"
+code = """
+let mut matrix = vec![vec![42]];
+rotate(&mut matrix);
+assert_eq!(matrix, vec![vec![42]]);
+"""
+
+[[task.tests.cases]]
+name = "test_2x2"
+code = """
+let mut matrix = vec![
+    vec![1, 2],
+    vec![3, 4],
+];
+rotate(&mut matrix);
+assert_eq!(matrix, vec![
+    vec![3, 1],
+    vec![4, 2],
+]);
+"""
+
+[[task.tests.cases]]
+name = "test_rotate_four_times_identity"
+code = """
+let original = vec![
+    vec![1, 2, 3],
+    vec![4, 5, 6],
+    vec![7, 8, 9],
+];
+let mut matrix = original.clone();
+rotate(&mut matrix);
+rotate(&mut matrix);
+rotate(&mut matrix);
+rotate(&mut matrix);
+assert_eq!(matrix, original);
+"""

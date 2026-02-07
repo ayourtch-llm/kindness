@@ -1,0 +1,107 @@
+[task]
+id = "3_07_serialize_binary_tree"
+tier = 3
+title = "Serialize and Deserialize Binary Tree"
+language = "rust"
+
+[task.description]
+text = """
+Implement serialization and deserialization of a binary tree.
+
+Define the following struct and functions:
+
+```rust
+struct TreeNode {
+    val: i32,
+    left: Option<Box<TreeNode>>,
+    right: Option<Box<TreeNode>>,
+}
+```
+
+- `fn serialize(root: &Option<Box<TreeNode>>) -> String` — Serialize the binary
+  tree to a string representation.
+- `fn deserialize(data: &str) -> Option<Box<TreeNode>>` — Deserialize the string
+  back into a binary tree.
+
+The serialization format is up to you, but `deserialize(serialize(tree))` must
+produce a tree structurally identical to the original with the same values.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_single_node"
+code = """
+let root = Some(Box::new(TreeNode { val: 1, left: None, right: None }));
+let serialized = serialize(&root);
+let deserialized = deserialize(&serialized);
+assert_eq!(deserialized.as_ref().unwrap().val, 1);
+assert!(deserialized.as_ref().unwrap().left.is_none());
+assert!(deserialized.as_ref().unwrap().right.is_none());
+"""
+
+[[task.tests.cases]]
+name = "test_complete_tree"
+code = """
+let root = Some(Box::new(TreeNode {
+    val: 1,
+    left: Some(Box::new(TreeNode { val: 2, left: None, right: None })),
+    right: Some(Box::new(TreeNode { val: 3, left: None, right: None })),
+}));
+let serialized = serialize(&root);
+let deserialized = deserialize(&serialized);
+let r = deserialized.as_ref().unwrap();
+assert_eq!(r.val, 1);
+assert_eq!(r.left.as_ref().unwrap().val, 2);
+assert_eq!(r.right.as_ref().unwrap().val, 3);
+"""
+
+[[task.tests.cases]]
+name = "test_empty_tree"
+code = """
+let root: Option<Box<TreeNode>> = None;
+let serialized = serialize(&root);
+let deserialized = deserialize(&serialized);
+assert!(deserialized.is_none());
+"""
+
+[[task.tests.cases]]
+name = "test_left_skewed_tree"
+code = """
+let root = Some(Box::new(TreeNode {
+    val: 1,
+    left: Some(Box::new(TreeNode {
+        val: 2,
+        left: Some(Box::new(TreeNode { val: 3, left: None, right: None })),
+        right: None,
+    })),
+    right: None,
+}));
+let serialized = serialize(&root);
+let deserialized = deserialize(&serialized);
+let r = deserialized.as_ref().unwrap();
+assert_eq!(r.val, 1);
+assert_eq!(r.left.as_ref().unwrap().val, 2);
+assert_eq!(r.left.as_ref().unwrap().left.as_ref().unwrap().val, 3);
+assert!(r.right.is_none());
+"""
+
+[[task.tests.cases]]
+name = "test_negative_values"
+code = """
+let root = Some(Box::new(TreeNode {
+    val: -1,
+    left: Some(Box::new(TreeNode { val: -2, left: None, right: None })),
+    right: Some(Box::new(TreeNode { val: -3, left: None, right: None })),
+}));
+let serialized = serialize(&root);
+let deserialized = deserialize(&serialized);
+let r = deserialized.as_ref().unwrap();
+assert_eq!(r.val, -1);
+assert_eq!(r.left.as_ref().unwrap().val, -2);
+assert_eq!(r.right.as_ref().unwrap().val, -3);
+"""

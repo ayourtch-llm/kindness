@@ -1,0 +1,81 @@
+[task]
+id = "3_02_trie"
+tier = 3
+title = "Trie (Prefix Tree)"
+language = "rust"
+
+[task.description]
+text = """
+Implement a Trie (prefix tree) data structure that supports inserting words and
+searching for exact matches and prefix matches.
+
+Define a struct `Trie` with the following methods:
+
+- `new() -> Self` — Create a new, empty Trie.
+- `insert(&mut self, word: &str)` — Insert a word into the trie.
+- `search(&self, word: &str) -> bool` — Return `true` if the exact word exists
+  in the trie.
+- `starts_with(&self, prefix: &str) -> bool` — Return `true` if any word in the
+  trie starts with the given prefix.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_insert_and_search"
+code = """
+let mut trie = Trie::new();
+trie.insert("apple");
+assert!(trie.search("apple"));
+assert!(!trie.search("app"));
+"""
+
+[[task.tests.cases]]
+name = "test_starts_with"
+code = """
+let mut trie = Trie::new();
+trie.insert("apple");
+assert!(trie.starts_with("app"));
+assert!(trie.starts_with("apple"));
+assert!(!trie.starts_with("b"));
+"""
+
+[[task.tests.cases]]
+name = "test_multiple_words"
+code = """
+let mut trie = Trie::new();
+trie.insert("apple");
+trie.insert("app");
+assert!(trie.search("app"));
+assert!(trie.search("apple"));
+assert!(!trie.search("ap"));
+"""
+
+[[task.tests.cases]]
+name = "test_empty_trie"
+code = """
+let trie = Trie::new();
+assert!(!trie.search("anything"));
+assert!(!trie.starts_with("a"));
+"""
+
+[[task.tests.cases]]
+name = "test_overlapping_prefixes"
+code = """
+let mut trie = Trie::new();
+trie.insert("car");
+trie.insert("card");
+trie.insert("care");
+trie.insert("cared");
+assert!(trie.search("car"));
+assert!(trie.search("card"));
+assert!(trie.search("care"));
+assert!(trie.search("cared"));
+assert!(!trie.search("cars"));
+assert!(trie.starts_with("car"));
+assert!(trie.starts_with("care"));
+"""

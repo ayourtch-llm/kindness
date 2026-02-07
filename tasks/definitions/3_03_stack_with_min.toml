@@ -1,0 +1,89 @@
+[task]
+id = "3_03_stack_with_min"
+tier = 3
+title = "Stack with O(1) Minimum"
+language = "rust"
+
+[task.description]
+text = """
+Implement a stack that supports push, pop, and retrieving the minimum element,
+all in O(1) time complexity.
+
+Define a struct `MinStack` with the following methods:
+
+- `new() -> Self` — Create a new, empty MinStack.
+- `push(&mut self, val: i32)` — Push a value onto the stack.
+- `pop(&mut self) -> Option<i32>` — Remove and return the top element, or `None`
+  if empty.
+- `min(&self) -> Option<i32>` — Return the minimum element in the stack without
+  removing it, or `None` if the stack is empty.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_basic_operations"
+code = """
+let mut stack = MinStack::new();
+stack.push(3);
+stack.push(5);
+assert_eq!(stack.min(), Some(3));
+stack.push(2);
+assert_eq!(stack.min(), Some(2));
+"""
+
+[[task.tests.cases]]
+name = "test_pop_updates_min"
+code = """
+let mut stack = MinStack::new();
+stack.push(2);
+stack.push(1);
+stack.push(3);
+assert_eq!(stack.min(), Some(1));
+stack.pop();
+assert_eq!(stack.min(), Some(1));
+stack.pop();
+assert_eq!(stack.min(), Some(2));
+"""
+
+[[task.tests.cases]]
+name = "test_empty_stack"
+code = """
+let mut stack = MinStack::new();
+assert_eq!(stack.min(), None);
+assert_eq!(stack.pop(), None);
+"""
+
+[[task.tests.cases]]
+name = "test_duplicate_minimums"
+code = """
+let mut stack = MinStack::new();
+stack.push(1);
+stack.push(1);
+stack.push(1);
+assert_eq!(stack.min(), Some(1));
+stack.pop();
+assert_eq!(stack.min(), Some(1));
+stack.pop();
+assert_eq!(stack.min(), Some(1));
+stack.pop();
+assert_eq!(stack.min(), None);
+"""
+
+[[task.tests.cases]]
+name = "test_decreasing_then_increasing"
+code = """
+let mut stack = MinStack::new();
+stack.push(5);
+stack.push(3);
+stack.push(1);
+assert_eq!(stack.min(), Some(1));
+assert_eq!(stack.pop(), Some(1));
+assert_eq!(stack.min(), Some(3));
+assert_eq!(stack.pop(), Some(3));
+assert_eq!(stack.min(), Some(5));
+"""

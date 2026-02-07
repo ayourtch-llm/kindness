@@ -1,0 +1,115 @@
+[task]
+id = "3_09_json_parser"
+tier = 3
+title = "JSON Parser"
+language = "rust"
+
+[task.description]
+text = """
+Implement a parser for a subset of JSON. The parser must handle the following
+JSON value types:
+
+- Strings (double-quoted, no escape sequence handling required)
+- Numbers (integers and floating-point)
+- Booleans (`true`, `false`)
+- Null (`null`)
+- Arrays (ordered lists of JSON values)
+- Objects (string-keyed maps of JSON values)
+
+Define an enum and a parsing function:
+
+```rust
+#[derive(Debug, PartialEq)]
+enum JsonValue {
+    Null,
+    Bool(bool),
+    Number(f64),
+    Str(String),
+    Array(Vec<JsonValue>),
+    Object(Vec<(String, JsonValue)>),
+}
+
+fn parse_json(input: &str) -> Result<JsonValue, String>
+```
+
+The parser should skip whitespace and return `Err` with a descriptive message
+for malformed input. Object key-value pairs should be stored in the order they
+appear.
+"""
+
+[task.constraints]
+time_limit_seconds = 5
+must_use = []
+forbidden = []
+
+[task.tests]
+[[task.tests.cases]]
+name = "test_parse_null"
+code = """
+assert_eq!(parse_json("null").unwrap(), JsonValue::Null);
+"""
+
+[[task.tests.cases]]
+name = "test_parse_bool"
+code = """
+assert_eq!(parse_json("true").unwrap(), JsonValue::Bool(true));
+assert_eq!(parse_json("false").unwrap(), JsonValue::Bool(false));
+"""
+
+[[task.tests.cases]]
+name = "test_parse_number"
+code = """
+if let JsonValue::Number(n) = parse_json("42").unwrap() {
+    assert!((n - 42.0).abs() < 1e-9);
+} else {
+    panic!("Expected Number");
+}
+if let JsonValue::Number(n) = parse_json("3.14").unwrap() {
+    assert!((n - 3.14).abs() < 1e-9);
+} else {
+    panic!("Expected Number");
+}
+"""
+
+[[task.tests.cases]]
+name = "test_parse_string"
+code = """
+assert_eq!(parse_json("\"hello\"").unwrap(), JsonValue::Str("hello".to_string()));
+"""
+
+[[task.tests.cases]]
+name = "test_parse_array"
+code = """
+let result = parse_json("[1, 2, 3]").unwrap();
+if let JsonValue::Array(arr) = result {
+    assert_eq!(arr.len(), 3);
+} else {
+    panic!("Expected Array");
+}
+"""
+
+[[task.tests.cases]]
+name = "test_parse_object"
+code = """
+let result = parse_json("{\"key\": \"value\", \"num\": 42}").unwrap();
+if let JsonValue::Object(obj) = result {
+    assert_eq!(obj.len(), 2);
+    assert_eq!(obj[0].0, "key");
+    assert_eq!(obj[0].1, JsonValue::Str("value".to_string()));
+    assert_eq!(obj[1].0, "num");
+    if let JsonValue::Number(n) = obj[1].1 {
+        assert!((n - 42.0).abs() < 1e-9);
+    } else {
+        panic!("Expected Number for 'num' key");
+    }
+} else {
+    panic!("Expected Object");
+}
+"""
+
+[[task.tests.cases]]
+name = "test_parse_invalid"
+code = """
+assert!(parse_json("undefined").is_err());
+assert!(parse_json("{missing_quotes: 1}").is_err());
+"""
