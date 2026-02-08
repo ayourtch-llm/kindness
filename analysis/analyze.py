@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from itertools import combinations
 from pathlib import Path
@@ -128,6 +129,102 @@ def compute_tier_aggregates(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
+# Failure-mode diagnostics
+# ---------------------------------------------------------------------------
+
+def diagnose_failures(df: pd.DataFrame) -> dict:
+    """Investigate failure modes across tiers and styles.
+
+    Returns a dict with diagnostic findings for inclusion in the report.
+    All analysis is purely algorithmic / local – no LLM calls.
+    """
+    diag: dict = {}
+
+    # --- 1. Compilation-failure vs. test-failure breakdown by tier ----------
+    if "tier" in df.columns and "compiles" in df.columns:
+        tier_failure_rows: list[dict] = []
+        for tier, g in df.groupby("tier"):
+            n = len(g)
+            compile_fails = int((g["compiles"] == 0).sum())
+            compile_ok = n - compile_fails
+            # Among those that compiled, how many had at least one test fail?
+            compiled_mask = g["compiles"] == 1
+            test_failures = int((g.loc[compiled_mask, "pass"] < 1.0).sum()) if compiled_mask.any() else 0
+            full_pass = int((g.loc[compiled_mask, "pass"] == 1.0).sum()) if compiled_mask.any() else 0
+            tier_failure_rows.append({
+                "tier": int(tier),
+                "n": n,
+                "compile_failures": compile_fails,
+                "test_failures": test_failures,
+                "full_pass": full_pass,
+                "compile_rate": compile_ok / n if n else 0.0,
+                "pass_rate_if_compiled": full_pass / compile_ok if compile_ok else 0.0,
+            })
+        diag["tier_failure_breakdown"] = tier_failure_rows
+
+    # --- 2. Markdown-fence detection correlation ---------------------------
+    if "had_markdown_fences" in df.columns:
+        md_rows: list[dict] = []
+        for label, mask in [("with_fences", df["had_markdown_fences"]),
+                            ("without_fences", ~df["had_markdown_fences"])]:
+            sub = df.loc[mask]
+            if sub.empty:
+                continue
+            md_rows.append({
+                "group": label,
+                "n": len(sub),
+                "compile_rate": sub["compiles"].mean() if "compiles" in sub.columns else np.nan,
+                "pass_rate": sub["pass"].mean(),
+            })
+        diag["markdown_fences"] = md_rows
+
+        # Per-tier markdown fence breakdown
+        if "tier" in df.columns:
+            md_tier_rows: list[dict] = []
+            for tier, g in df.groupby("tier"):
+                fenced = g["had_markdown_fences"].sum()
+                md_tier_rows.append({
+                    "tier": int(tier),
+                    "n": len(g),
+                    "fenced_count": int(fenced),
+                    "fenced_pct": fenced / len(g) if len(g) else 0.0,
+                })
+            diag["markdown_fences_by_tier"] = md_tier_rows
+
+    # --- 3. Tier anomaly detection -----------------------------------------
+    # Flag any tier whose pass-rate is lower than all higher-numbered tiers.
+    if "tier" in df.columns:
+        tier_rates = df.groupby("tier")["pass"].mean().sort_index()
+        anomalies: list[dict] = []
+        tiers = list(tier_rates.index)
+        for i, t in enumerate(tiers):
+            higher = [tier_rates[h] for h in tiers if h > t]
+            if higher and tier_rates[t] < min(higher):
+                anomalies.append({
+                    "tier": int(t),
+                    "pass_rate": float(tier_rates[t]),
+                    "min_higher_tier_rate": float(min(higher)),
+                })
+        diag["tier_anomalies"] = anomalies
+
+    # --- 4. Per-task failure counts (top N worst tasks) --------------------
+    if "task_id" in df.columns:
+        task_stats = (
+            df.groupby("task_id")
+            .agg(
+                n=("pass", "size"),
+                pass_rate=("pass", "mean"),
+                compile_rate=("compiles", "mean") if "compiles" in df.columns else ("pass", "size"),
+            )
+            .sort_values("pass_rate")
+        )
+        worst = task_stats.head(10).reset_index()
+        diag["worst_tasks"] = worst.to_dict(orient="records")
+
+    return diag
+
+
+# ---------------------------------------------------------------------------
 # Statistical tests
 # ---------------------------------------------------------------------------
 
@@ -175,6 +272,7 @@ def generate_summary(
     agg: pd.DataFrame,
     tier_agg: pd.DataFrame,
     test_results: dict,
+    diagnostics: dict,
     out_path: Path,
 ) -> None:
     """Write summary.md."""
@@ -220,6 +318,77 @@ def generate_summary(
             f"| {r['pass_rate']:.3f} | {r['pass_std']:.3f} | ±{r['pass_ci95']:.3f} |"
         )
     lines.append("")
+
+    # ── Failure-mode diagnostics ──────────────────────────────────────
+    lines.append("## Failure-Mode Diagnostics\n")
+
+    # Tier anomalies
+    anomalies = diagnostics.get("tier_anomalies", [])
+    if anomalies:
+        lines.append("### Tier Anomalies\n")
+        lines.append("The following tiers have a pass rate **lower** than all higher-difficulty tiers:\n")
+        for a in anomalies:
+            lines.append(
+                f"- **Tier {a['tier']}**: pass rate {a['pass_rate']:.3f} "
+                f"(lowest higher-tier rate: {a['min_higher_tier_rate']:.3f})"
+            )
+        lines.append("")
+    else:
+        lines.append("### Tier Anomalies\n")
+        lines.append("No anomalies detected – pass rates decrease monotonically with tier difficulty.\n")
+
+    # Compilation vs test-failure breakdown by tier
+    breakdown = diagnostics.get("tier_failure_breakdown", [])
+    if breakdown:
+        lines.append("### Failure Breakdown by Tier\n")
+        lines.append("| Tier | n | Compile Failures | Test Failures | Full Pass | Compile Rate | Pass Rate (if compiled) |")
+        lines.append("|------|---|-----------------|---------------|-----------|--------------|------------------------|")
+        for r in breakdown:
+            lines.append(
+                f"| {r['tier']} | {r['n']} | {r['compile_failures']} "
+                f"| {r['test_failures']} | {r['full_pass']} "
+                f"| {r['compile_rate']:.3f} | {r['pass_rate_if_compiled']:.3f} |"
+            )
+        lines.append("")
+
+    # Markdown-fence impact
+    md = diagnostics.get("markdown_fences", [])
+    if md:
+        lines.append("### Markdown Fence Impact\n")
+        lines.append("Some LLM responses wrap code in markdown fences (` ```rust ... ``` `). "
+                      "The eval harness strips these, but text outside fences (e.g. explanations) "
+                      "previously leaked through and caused compilation failures.\n")
+        lines.append("| Group | n | Compile Rate | Pass Rate |")
+        lines.append("|-------|---|--------------|-----------|")
+        for r in md:
+            lines.append(
+                f"| {r['group']} | {r['n']} | {r['compile_rate']:.3f} | {r['pass_rate']:.3f} |"
+            )
+        lines.append("")
+
+    md_tier = diagnostics.get("markdown_fences_by_tier", [])
+    if md_tier:
+        lines.append("#### Markdown Fences by Tier\n")
+        lines.append("| Tier | n | Fenced Count | Fenced % |")
+        lines.append("|------|---|--------------|----------|")
+        for r in md_tier:
+            lines.append(
+                f"| {r['tier']} | {r['n']} | {r['fenced_count']} | {r['fenced_pct']:.1%} |"
+            )
+        lines.append("")
+
+    # Worst tasks
+    worst = diagnostics.get("worst_tasks", [])
+    if worst:
+        lines.append("### Worst-Performing Tasks (up to 10)\n")
+        lines.append("| Task ID | n | Pass Rate | Compile Rate |")
+        lines.append("|---------|---|-----------|--------------|")
+        for r in worst:
+            lines.append(
+                f"| {r['task_id']} | {r['n']} "
+                f"| {r['pass_rate']:.3f} | {r.get('compile_rate', 0):.3f} |"
+            )
+        lines.append("")
 
     out_path.write_text("\n".join(lines))
     print(f"Wrote {out_path}")
@@ -344,9 +513,10 @@ def main() -> None:
     tier_agg = compute_tier_aggregates(df) if "tier" in df.columns else pd.DataFrame()
 
     test_results = run_statistical_tests(df, styles)
+    diagnostics = diagnose_failures(df)
 
     analysis_dir = Path(__file__).resolve().parent
-    generate_summary(agg, tier_agg, test_results, analysis_dir / "summary.md")
+    generate_summary(agg, tier_agg, test_results, diagnostics, analysis_dir / "summary.md")
     generate_figures(df, agg, analysis_dir / "figures")
 
     print("Analysis complete.")

@@ -93,6 +93,7 @@ struct EvalResult {
     expect_count: usize,
     must_use_satisfied: bool,
     forbidden_violated: bool,
+    had_markdown_fences: bool,
     latency_ms: u64,
     input_tokens: u64,
     output_tokens: u64,
@@ -101,21 +102,34 @@ struct EvalResult {
 // ── Helpers ─────────────────────────────────────────────────────────
 
 /// Strip markdown code fences (```rust / ```) that LLMs sometimes emit.
-fn strip_markdown_fences(raw: &str) -> String {
-    let mut lines: Vec<&str> = Vec::new();
+/// Returns (cleaned_code, had_fences).
+fn strip_markdown_fences(raw: &str) -> (String, bool) {
+    let mut inside_lines: Vec<&str> = Vec::new();
+    let mut outside_lines: Vec<&str> = Vec::new();
     let mut inside_fence = false;
+    let mut fence_count: usize = 0;
 
     for line in raw.lines() {
         let trimmed = line.trim();
         if trimmed.starts_with("```") {
+            fence_count += 1;
             inside_fence = !inside_fence;
             continue;
         }
-        lines.push(line);
+        if inside_fence {
+            inside_lines.push(line);
+        } else {
+            outside_lines.push(line);
+        }
     }
-    // If there was an odd number of fences we still keep the collected lines.
-    let _ = inside_fence;
-    lines.join("\n")
+
+    if fence_count >= 2 && !inside_lines.is_empty() {
+        // Fences were detected – only keep content from inside the fences.
+        (inside_lines.join("\n"), true)
+    } else {
+        // No fences (or a single stray fence) – keep everything outside.
+        (outside_lines.join("\n"), fence_count > 0)
+    }
 }
 
 /// Count logical lines of code (non-blank, non-comment-only).
@@ -404,7 +418,7 @@ fn main() {
                 continue;
             }
         };
-        let code = strip_markdown_fences(&raw_code);
+        let (code, had_markdown_fences) = strip_markdown_fences(&raw_code);
 
         // Read .meta.json
         let meta_path = rs_path.with_extension("meta.json");
@@ -474,6 +488,7 @@ fn main() {
             expect_count,
             must_use_satisfied,
             forbidden_violated,
+            had_markdown_fences,
             latency_ms: meta.as_ref().map_or(0, |m| m.latency_ms),
             input_tokens: meta.as_ref().map_or(0, |m| m.input_tokens),
             output_tokens: meta.as_ref().map_or(0, |m| m.output_tokens),
