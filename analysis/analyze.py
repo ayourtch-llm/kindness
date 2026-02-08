@@ -165,8 +165,8 @@ def diagnose_failures(df: pd.DataFrame) -> dict:
     # --- 2. Markdown-fence detection correlation ---------------------------
     if "had_markdown_fences" in df.columns:
         md_rows: list[dict] = []
-        for label, mask in [("with_fences", df["had_markdown_fences"] == True),
-                            ("without_fences", df["had_markdown_fences"] == False)]:
+        for label, mask in [("with_fences", df["had_markdown_fences"]),
+                            ("without_fences", ~df["had_markdown_fences"])]:
             sub = df.loc[mask]
             if sub.empty:
                 continue

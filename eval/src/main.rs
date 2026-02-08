@@ -128,8 +128,7 @@ fn strip_markdown_fences(raw: &str) -> (String, bool) {
         (inside_lines.join("\n"), true)
     } else {
         // No fences (or a single stray fence) – keep everything outside.
-        let all: Vec<&str> = raw.lines().filter(|l| !l.trim().starts_with("```")).collect();
-        (all.join("\n"), fence_count > 0)
+        (outside_lines.join("\n"), fence_count > 0)
     }
 }
 
