@@ -191,8 +191,8 @@ name = "nested_calls"
 code = """
 let mut vm = VM::new();
 // main: push 2, call triple at 4, halt
-// triple (addr 4): call double at 8, push top, add (triples original via double+add), ret
-// double (addr 8): dup, add, ret
+// triple (addr 4): dup, call double at 9, swap, add, ret
+// double (addr 9): dup, add, ret
 let prog = vec![
     Opcode::Push(2),     // 0
     Opcode::Call(4),     // 1: call triple
