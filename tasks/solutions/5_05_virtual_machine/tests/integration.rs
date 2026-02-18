@@ -106,3 +106,46 @@ fn comparison_ops() {
     let stack = vm.execute(&prog).unwrap();
     assert_eq!(stack, vec![2]);
 }
+
+#[test]
+fn swap_over_pop_sub() {
+    let mut vm = VM::new();
+    let prog = vec![
+        Opcode::Push(10),
+        Opcode::Push(3),
+        Opcode::Swap,       // 3 10
+        Opcode::Over,       // 3 10 3
+        Opcode::Sub,        // 3 (10-3=7)
+        Opcode::Push(99),
+        Opcode::Pop,        // discard 99: stack is [3, 7]
+        Opcode::Halt,
+    ];
+    let stack = vm.execute(&prog).unwrap();
+    assert_eq!(stack, vec![3, 7]);
+}
+
+#[test]
+fn nested_calls() {
+    let mut vm = VM::new();
+    // main: push 2, call triple at 4, halt
+    // triple (addr 4): dup, call double at 9, swap, add, ret
+    // double (addr 9): dup, add, ret
+    let prog = vec![
+        Opcode::Push(2),     // 0
+        Opcode::Call(4),     // 1: call triple
+        Opcode::Halt,        // 2
+        Opcode::Halt,        // 3: padding
+        // triple fn at 4:
+        Opcode::Dup,         // 4: [2, 2]
+        Opcode::Call(9),     // 5: call double -> [2, 4], ret to 6
+        Opcode::Swap,        // 6: [4, 2]
+        Opcode::Add,         // 7: [6]
+        Opcode::Ret,         // 8
+        // double fn at 9:
+        Opcode::Dup,         // 9: dup top
+        Opcode::Add,         // 10: double it
+        Opcode::Ret,         // 11
+    ];
+    let stack = vm.execute(&prog).unwrap();
+    assert_eq!(stack, vec![6]);
+}

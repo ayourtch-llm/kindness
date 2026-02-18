@@ -35,3 +35,19 @@ fn test_complex_expression() {
     let result = calculate("3 + 4 * 2 / (1 - 5) * 2 + 3");
     assert!((result - 2.0).abs() < 1e-9);
 }
+
+#[test]
+fn test_unary_minus() {
+    let result = calculate("-3 + 5");
+    assert!((result - 2.0).abs() < 1e-9);
+    let result2 = calculate("-(2 + 3)");
+    assert!((result2 - (-5.0)).abs() < 1e-9);
+    let result3 = calculate("2 * -3");
+    assert!((result3 - (-6.0)).abs() < 1e-9);
+}
+
+#[test]
+fn test_subtraction_chain() {
+    let result = calculate("10 - 3 - 2");
+    assert!((result - 5.0).abs() < 1e-9);
+}
