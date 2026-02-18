@@ -21,24 +21,7 @@ fn tokenize(expr: &str) -> Vec<Token> {
             ' ' => { i += 1; }
             '(' => { tokens.push(Token::LParen); i += 1; }
             ')' => { tokens.push(Token::RParen); i += 1; }
-            '+' | '*' | '/' => { tokens.push(Token::Op(chars[i])); i += 1; }
-            '-' => {
-                // Unary minus: at start, after '(' or after an operator
-                let is_unary = tokens.is_empty()
-                    || matches!(tokens.last(), Some(Token::LParen) | Some(Token::Op(_)));
-                if is_unary {
-                    let mut num_str = String::from("-");
-                    i += 1;
-                    while i < chars.len() && (chars[i].is_ascii_digit() || chars[i] == '.') {
-                        num_str.push(chars[i]);
-                        i += 1;
-                    }
-                    tokens.push(Token::Num(num_str.parse().unwrap()));
-                } else {
-                    tokens.push(Token::Op('-'));
-                    i += 1;
-                }
-            }
+            '+' | '-' | '*' | '/' => { tokens.push(Token::Op(chars[i])); i += 1; }
             c if c.is_ascii_digit() || c == '.' => {
                 let mut num_str = String::new();
                 while i < chars.len() && (chars[i].is_ascii_digit() || chars[i] == '.') {
@@ -78,6 +61,12 @@ fn parse_term(tokens: &[Token], pos: &mut usize) -> f64 {
 }
 
 fn parse_factor(tokens: &[Token], pos: &mut usize) -> f64 {
+    if *pos < tokens.len() {
+        if let Token::Op('-') = &tokens[*pos] {
+            *pos += 1;
+            return -parse_factor(tokens, pos);
+        }
+    }
     match &tokens[*pos] {
         Token::Num(n) => { let v = *n; *pos += 1; v }
         Token::LParen => {

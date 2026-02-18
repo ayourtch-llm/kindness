@@ -60,3 +60,19 @@ fn unknown_variable_error() {
     let r = eval.evaluate("x + 1");
     assert!(r.is_err());
 }
+
+#[test]
+fn nested_function_calls() {
+    let mut eval = Evaluator::new();
+    eval.register_function("double", Box::new(|args: &[f64]| args[0] * 2.0));
+    eval.register_function("inc", Box::new(|args: &[f64]| args[0] + 1.0));
+    let r = eval.evaluate("double(inc(3))").unwrap();
+    assert!((r - 8.0).abs() < 1e-9);
+}
+
+#[test]
+fn unknown_function_error() {
+    let eval = Evaluator::new();
+    let r = eval.evaluate("foo(1)");
+    assert!(r.is_err());
+}

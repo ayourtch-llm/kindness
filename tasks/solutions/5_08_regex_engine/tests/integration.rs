@@ -63,3 +63,19 @@ fn complex_patterns() {
     assert!(regex_match("a(b|c)*d", "abcbd"));
     assert!(!regex_match("a(b|c)*d", "aed"));
 }
+
+#[test]
+fn quantifier_on_group() {
+    assert!(regex_match("(abc)+", "abcabc"));
+    assert!(!regex_match("(abc)+", "abab"));
+    assert!(regex_match("(a|b)+c", "aabbac"));
+    assert!(!regex_match("(a|b)+c", "c"));
+}
+
+#[test]
+fn empty_and_edge_cases() {
+    assert!(regex_match("a*", ""));
+    assert!(regex_match("a*", "aaa"));
+    assert!(!regex_match("a+", ""));
+    assert!(regex_match("(a*)(b*)", "aabb"));
+}

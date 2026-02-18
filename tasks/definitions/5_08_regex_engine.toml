@@ -103,3 +103,21 @@ assert!(regex_match("a(b|c)*d", "ad"));
 assert!(regex_match("a(b|c)*d", "abcbd"));
 assert!(!regex_match("a(b|c)*d", "aed"));
 """
+
+[[task.tests.cases]]
+name = "quantifier_on_group"
+code = """
+assert!(regex_match("(abc)+", "abcabc"));
+assert!(!regex_match("(abc)+", "abab"));
+assert!(regex_match("(a|b)+c", "aabbac"));
+assert!(!regex_match("(a|b)+c", "c"));
+"""
+
+[[task.tests.cases]]
+name = "empty_and_edge_cases"
+code = """
+assert!(regex_match("a*", ""));
+assert!(regex_match("a*", "aaa"));
+assert!(!regex_match("a+", ""));
+assert!(regex_match("(a*)(b*)", "aabb"));
+"""

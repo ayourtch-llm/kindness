@@ -108,6 +108,36 @@ if let JsonValue::Object(obj) = result {
 """
 
 [[task.tests.cases]]
+name = "test_parse_nested"
+code = """
+let result = parse_json("{\"a\": [1, {\"b\": 2}]}").unwrap();
+if let JsonValue::Object(obj) = result {
+    assert_eq!(obj[0].0, "a");
+    if let JsonValue::Array(arr) = &obj[0].1 {
+        assert_eq!(arr.len(), 2);
+        if let JsonValue::Object(inner) = &arr[1] {
+            assert_eq!(inner[0].0, "b");
+        } else {
+            panic!("Expected nested Object");
+        }
+    } else {
+        panic!("Expected Array");
+    }
+} else {
+    panic!("Expected Object");
+}
+"""
+
+[[task.tests.cases]]
+name = "test_parse_empty_structures"
+code = """
+let arr = parse_json("[]").unwrap();
+assert_eq!(arr, JsonValue::Array(vec![]));
+let obj = parse_json("{}").unwrap();
+assert_eq!(obj, JsonValue::Object(vec![]));
+"""
+
+[[task.tests.cases]]
 name = "test_parse_invalid"
 code = """
 assert!(parse_json("undefined").is_err());

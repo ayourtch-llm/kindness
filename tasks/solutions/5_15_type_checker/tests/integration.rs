@@ -170,3 +170,25 @@ fn higher_order_function() {
     );
     assert_eq!(type_check(&full_expr, &env).unwrap(), Type::Int);
 }
+
+#[test]
+fn variable_shadowing() {
+    use std::collections::HashMap;
+
+    let env = HashMap::new();
+    // let x = true in (let x = 5 in x + 1)
+    // inner x should shadow outer x (Bool -> Int)
+    let expr = Expr::Let(
+        "x".into(),
+        Box::new(Expr::BoolLit(true)),
+        Box::new(Expr::Let(
+            "x".into(),
+            Box::new(Expr::Lit(5)),
+            Box::new(Expr::Add(
+                Box::new(Expr::Var("x".into())),
+                Box::new(Expr::Lit(1)),
+            )),
+        )),
+    );
+    assert_eq!(type_check(&expr, &env).unwrap(), Type::Int);
+}

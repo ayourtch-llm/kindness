@@ -59,6 +59,34 @@ fn test_parse_object() {
 }
 
 #[test]
+fn test_parse_nested() {
+    let result = parse_json("{\"a\": [1, {\"b\": 2}]}").unwrap();
+    if let JsonValue::Object(obj) = result {
+        assert_eq!(obj[0].0, "a");
+        if let JsonValue::Array(arr) = &obj[0].1 {
+            assert_eq!(arr.len(), 2);
+            if let JsonValue::Object(inner) = &arr[1] {
+                assert_eq!(inner[0].0, "b");
+            } else {
+                panic!("Expected nested Object");
+            }
+        } else {
+            panic!("Expected Array");
+        }
+    } else {
+        panic!("Expected Object");
+    }
+}
+
+#[test]
+fn test_parse_empty_structures() {
+    let arr = parse_json("[]").unwrap();
+    assert_eq!(arr, JsonValue::Array(vec![]));
+    let obj = parse_json("{}").unwrap();
+    assert_eq!(obj, JsonValue::Object(vec![]));
+}
+
+#[test]
 fn test_parse_invalid() {
     assert!(parse_json("undefined").is_err());
     assert!(parse_json("{missing_quotes: 1}").is_err());
